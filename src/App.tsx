@@ -6,11 +6,13 @@ import { parseDiceFormula, type RollResult } from './utils/diceParser'
 
 function App() {
   const [rollResult, setRollResult] = useState<RollResult | null>(null)
+  const [rollCount, setRollCount] = useState(0)
 
   const handleRoll = (formula: string) => {
     try {
       const result = parseDiceFormula(formula)
       setRollResult(result)
+      setRollCount(prev => prev + 1)
     } catch (error) {
       // We'll add proper error handling later
       console.error(error)
@@ -30,7 +32,7 @@ function App() {
       
       <main className="max-w-2xl mx-auto">
         <DiceInput onRoll={handleRoll} onClear={handleClear} />
-        <Results result={rollResult} />
+        <Results result={rollResult} rollId={rollCount} />
       </main>
     </div>
   )

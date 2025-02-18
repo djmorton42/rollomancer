@@ -2,7 +2,8 @@ import { type RollResult, type DiceGroupResult, type DiceOperator } from '../uti
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface ResultsProps {
-  result: RollResult | null
+  result: RollResult | null;
+  rollId: number;
 }
 
 function getDiceStyles(operator: DiceOperator) {
@@ -19,7 +20,7 @@ function getDiceStyles(operator: DiceOperator) {
   }
 }
 
-function DiceGroup({ group }: { group: DiceGroupResult }) {
+function DiceGroup({ group, rollId }: { group: DiceGroupResult; rollId: number }) {
   const operatorSymbol = {
     sum: '∑',
     greatest: 'max',
@@ -36,6 +37,7 @@ function DiceGroup({ group }: { group: DiceGroupResult }) {
 
   return (
     <motion.div
+      key={`group-${rollId}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -51,7 +53,7 @@ function DiceGroup({ group }: { group: DiceGroupResult }) {
         <div className="flex flex-wrap gap-2">
           {group.dice.map((die, diceIndex) => (
             <motion.span
-              key={diceIndex}
+              key={`die-${rollId}-${diceIndex}`}
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ 
@@ -68,6 +70,7 @@ function DiceGroup({ group }: { group: DiceGroupResult }) {
         </div>
       </div>
       <motion.div 
+        key={`total-${rollId}`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
@@ -79,17 +82,16 @@ function DiceGroup({ group }: { group: DiceGroupResult }) {
   )
 }
 
-export function Results({ result }: ResultsProps) {
+export function Results({ result, rollId }: ResultsProps) {
   if (!result) return null
 
-  // Extract numeric modifiers by comparing groups total to final total
   const groupsTotal = result.groups.reduce((sum, group) => sum + group.value, 0)
   const modifier = result.total - groupsTotal
 
   return (
     <AnimatePresence mode="wait">
       <motion.div
-        key={result.formula}
+        key={`result-${rollId}`}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
@@ -97,6 +99,7 @@ export function Results({ result }: ResultsProps) {
         className="bg-slate-700 rounded-lg p-4 mb-6"
       >
         <motion.div 
+          key={`header-${rollId}`}
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-4"
@@ -107,11 +110,16 @@ export function Results({ result }: ResultsProps) {
 
         <div className="space-y-4">
           {result.groups.map((group, index) => (
-            <DiceGroup key={`${result.formula}-${index}`} group={group} />
+            <DiceGroup 
+              key={`group-${rollId}-${index}`} 
+              group={group} 
+              rollId={rollId}
+            />
           ))}
         </div>
 
         <motion.div 
+          key={`footer-${rollId}`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
