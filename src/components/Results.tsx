@@ -1,7 +1,22 @@
-import { type RollResult, type DiceGroupResult } from '../utils/diceParser'
+import { type RollResult, type DiceGroupResult, type DiceOperator } from '../utils/diceParser'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface ResultsProps {
   result: RollResult | null
+}
+
+function getDiceStyles(operator: DiceOperator) {
+  // Base styles for all dice
+  const baseStyle = "inline-block px-3 py-1 rounded-full text-sm font-medium"
+  
+  switch (operator) {
+    case 'sum':
+      return `${baseStyle} bg-blue-900 text-blue-100 border-2 border-blue-500`
+    case 'greatest':
+      return `${baseStyle} bg-emerald-900 text-emerald-100 border-2 border-emerald-500`
+    case 'least':
+      return `${baseStyle} bg-amber-900 text-amber-100 border-2 border-amber-500`
+  }
 }
 
 function DiceGroup({ group }: { group: DiceGroupResult }) {
@@ -11,30 +26,56 @@ function DiceGroup({ group }: { group: DiceGroupResult }) {
     least: 'min'
   }[group.operator]
 
+  const operatorClass = {
+    sum: 'text-blue-400',
+    greatest: 'text-emerald-400',
+    least: 'text-amber-400'
+  }[group.operator]
+
+  const diceStyle = getDiceStyles(group.operator)
+
   return (
-    <div className="border-t border-slate-600 pt-3">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="border-t border-slate-600 pt-3"
+    >
       <div className="flex items-center gap-2 mb-2">
         <span className="font-bold">
           {group.count}d{group.sides} 
-          <span className="text-blue-400 ml-1">
+          <span className={`ml-1 ${operatorClass}`}>
             ({operatorSymbol})
           </span>:
         </span>
         <div className="flex flex-wrap gap-2">
           {group.dice.map((die, diceIndex) => (
-            <span
+            <motion.span
               key={diceIndex}
-              className="inline-block bg-slate-600 px-3 py-1 rounded-full text-sm"
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ 
+                duration: 0.5,
+                delay: diceIndex * 0.1,
+                type: "spring",
+                stiffness: 200
+              }}
+              className={diceStyle}
             >
               {die.value}
-            </span>
+            </motion.span>
           ))}
         </div>
       </div>
-      <div className="text-sm text-slate-300">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="text-sm text-slate-300"
+      >
         Group Total: {group.value}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }
 
@@ -46,28 +87,46 @@ export function Results({ result }: ResultsProps) {
   const modifier = result.total - groupsTotal
 
   return (
-    <div className="bg-slate-700 rounded-lg p-4 mb-6">
-      <div className="mb-4">
-        <h2 className="text-xl font-bold mb-2">Roll Results</h2>
-        <div className="text-slate-300">Formula: {result.formula}</div>
-      </div>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={result.formula}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.3 }}
+        className="bg-slate-700 rounded-lg p-4 mb-6"
+      >
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4"
+        >
+          <h2 className="text-xl font-bold mb-2">Roll Results</h2>
+          <div className="text-slate-300">Formula: {result.formula}</div>
+        </motion.div>
 
-      <div className="space-y-4">
-        {result.groups.map((group, index) => (
-          <DiceGroup key={index} group={group} />
-        ))}
-      </div>
-
-      <div className="mt-4 pt-3 border-t border-slate-600">
-        {modifier !== 0 && (
-          <div className="text-slate-300 mb-2">
-            Modifier: {modifier > 0 ? '+' : ''}{modifier}
-          </div>
-        )}
-        <div className="text-xl font-bold">
-          Total: {result.total}
+        <div className="space-y-4">
+          {result.groups.map((group, index) => (
+            <DiceGroup key={`${result.formula}-${index}`} group={group} />
+          ))}
         </div>
-      </div>
-    </div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="mt-4 pt-3 border-t border-slate-600"
+        >
+          {modifier !== 0 && (
+            <div className="text-slate-300 mb-2">
+              Modifier: {modifier > 0 ? '+' : ''}{modifier}
+            </div>
+          )}
+          <div className="text-xl font-bold">
+            Total: {result.total}
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   )
 } 

@@ -191,6 +191,22 @@ describe('diceParser', () => {
           expect(result.total).toBe(31) // 14 + 12 + 5
         })
 
+        it('correctly evaluates formulas with negative modifiers like  "3d10 + 2d8 - 1"', () => {
+            const result = parseDiceFormula('3d10 + 2d8 - 1')
+            
+            expect(result.formula).toBe('3d10+2d8-1')
+            expect(result.groups).toHaveLength(2)
+            
+            // First group (3d10)
+            expect(result.groups[0].value).toBe(14) // 4 + 8 + 2
+            
+            // Second group (2d8)
+            expect(result.groups[1].value).toBe(12) // 5 + 7
+            
+            // Total with modifier
+            expect(result.total).toBe(25) // 14 + 12 -1
+        })        
+
         it('correctly evaluates "<3d10 + >2d8"', () => {
           const result = parseDiceFormula('<3d10 + >2d8')
           
@@ -212,7 +228,7 @@ describe('diceParser', () => {
         it('throws error for invalid formula parts', () => {
           expect(() => parseDiceFormula('3d10 + abc')).toThrow('Invalid formula part: abc')
           expect(() => parseDiceFormula('3d10 + 2d')).toThrow('Invalid formula part: 2d')
-          expect(() => parseDiceFormula('+')).toThrow('Invalid formula part: ')
+          expect(() => parseDiceFormula('+')).toThrow('No valid dice groups found in formula')
         })
     })
 }) 

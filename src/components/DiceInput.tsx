@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 
 interface DiceInputProps {
   onRoll: (formula: string) => void;
+  onClear: () => void;
 }
 
-export function DiceInput({ onRoll }: DiceInputProps) {
+export function DiceInput({ onRoll, onClear }: DiceInputProps) {
   const [formula, setFormula] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -14,10 +16,18 @@ export function DiceInput({ onRoll }: DiceInputProps) {
     }
   }
 
+  const handleClear = () => {
+    setFormula('')
+    onClear()
+    // Focus the input after clearing
+    inputRef.current?.focus()
+  }
+
   return (
     <form onSubmit={handleSubmit} className="mb-6">
       <div className="flex gap-2">
         <input
+          ref={inputRef}
           type="text"
           value={formula}
           onChange={(e) => setFormula(e.target.value)}
@@ -29,6 +39,13 @@ export function DiceInput({ onRoll }: DiceInputProps) {
           className="px-6 py-2 bg-blue-600 rounded hover:bg-blue-700 transition-colors"
         >
           Roll
+        </button>
+        <button
+          type="button"
+          onClick={handleClear}
+          className="px-6 py-2 bg-slate-600 rounded hover:bg-slate-700 transition-colors"
+        >
+          Clear
         </button>
       </div>
     </form>

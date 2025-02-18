@@ -17,6 +17,10 @@ function App() {
     }
   }
 
+  const handleClear = () => {
+    setRollResult(null)
+  }
+
   return (
     <div className="min-h-screen bg-slate-800 text-white p-8">
       <header className="text-center mb-8">
@@ -25,7 +29,7 @@ function App() {
       </header>
       
       <main className="max-w-2xl mx-auto">
-        <DiceInput onRoll={handleRoll} />
+        <DiceInput onRoll={handleRoll} onClear={handleClear} />
         <Results result={rollResult} />
       </main>
     </div>

@@ -81,15 +81,18 @@ function parseOneGroup(groupStr: string): DiceGroupResult {
 }
 
 export function parseDiceFormula(formula: string): RollResult {
-    // Remove all spaces from the formula
-    formula = formula.replace(/\s+/g, '')
-
+    // Store the original formula for display
+    const displayFormula = formula.replace(/\s+/g, '')
+    
+    // Convert minuses to '+-' for parsing, but only internally
+    const workingFormula = displayFormula.replace(/\s*-\s*/g, '+-')
+    
     // Split into parts that might be dice or modifiers
-    const parts = formula.split('+')
-
+    const parts = workingFormula.split('+')
+    
     const diceRegex = /^[<>]?\d+d\d+$/i
-    const numberRegex = /^\d+$/
-
+    const numberRegex = /^-?\d+$/
+    
     const groups: DiceGroupResult[] = []
     let modifier = 0
 
@@ -98,6 +101,8 @@ export function parseDiceFormula(formula: string): RollResult {
             groups.push(parseOneGroup(part))
         } else if (numberRegex.test(part)) {
             modifier += parseInt(part)
+        } else if (part === '') {
+            continue
         } else {
             throw new Error(`Invalid formula part: ${part}`)
         }
@@ -112,6 +117,6 @@ export function parseDiceFormula(formula: string): RollResult {
     return {
         groups,
         total: groupsTotal + modifier,
-        formula
+        formula: displayFormula  // Use the original, cleaned formula for display
     }
 } 
