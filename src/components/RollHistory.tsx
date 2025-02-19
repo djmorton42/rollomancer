@@ -1,6 +1,5 @@
 import { motion, AnimatePresence, AnimationProps } from 'framer-motion'
 import type { RollResult } from '../utils/diceParser'
-import { useState } from 'react'
 
 interface RollHistoryProps {
   rolls: Array<RollResult & { id: number }>
@@ -11,42 +10,6 @@ interface RollHistoryProps {
 }
 
 export function RollHistory({ rolls, onReroll, onView, onClearEntry, onClearAll }: RollHistoryProps) {
-  const [popupVisible, setPopupVisible] = useState(false)
-  const [popupContent, setPopupContent] = useState<string | null>(null)
-  const [popupTimeout, setPopupTimeout] = useState<ReturnType<typeof setTimeout> | null>(null)
-
-  const handleMouseEnter = (roll: RollResult) => {
-    const timeout = setTimeout(() => {
-      const breakdown = getRollBreakdown(roll)
-      setPopupContent(breakdown)
-      setPopupVisible(true)
-    }, 1000)
-    setPopupTimeout(timeout)
-  }
-
-  const handleMouseLeave = () => {
-    if (popupTimeout) {
-      clearTimeout(popupTimeout)
-    }
-    setPopupVisible(false)
-    setPopupContent(null)
-  }
-
-  const getRollBreakdown = (roll: RollResult): string => {
-    const parts = roll.groups.map(group => {
-      const diceStr = `${group.count}d${group.sides}`
-      const values = group.dice.map(die => die.value).join(', ')
-      return `${diceStr}[${values}]=${group.value}`
-    })
-
-    const modifier = roll.total - roll.groups.reduce((sum, g) => sum + g.value, 0)
-    if (modifier !== 0) {
-      parts.push(modifier > 0 ? `+${modifier}` : modifier.toString())
-    }
-
-    return parts.join(' ')
-  }
-
   return (
     <div className="bg-slate-700 rounded-lg p-4 min-h-[400px] relative">
       <div className="flex justify-between items-center mb-4">
@@ -98,8 +61,6 @@ export function RollHistory({ rolls, onReroll, onView, onClearEntry, onClearAll 
                 }
               ] as unknown as AnimationProps['exit']}
               className="relative p-2 rounded group overflow-hidden"
-              onMouseEnter={() => handleMouseEnter(roll)}
-              onMouseLeave={handleMouseLeave}
             >
               <div className="flex justify-between items-center text-xs">
                 <span className="text-slate-300">{roll.formula}</span>
@@ -131,11 +92,6 @@ export function RollHistory({ rolls, onReroll, onView, onClearEntry, onClearAll 
           ))}
         </AnimatePresence>
       </div>
-      {popupVisible && popupContent && (
-        <div className="absolute top-0 left-0 mt-2 p-2 bg-white text-black rounded shadow-lg">
-          {popupContent}
-        </div>
-      )}
     </div>
   )
 } 
