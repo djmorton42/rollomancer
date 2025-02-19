@@ -4,6 +4,7 @@ import { Results } from './components/Results'
 import { RollHistory } from './components/RollHistory'
 import { Favourites } from './components/Favourites'
 import { parseDiceFormula, type RollResult } from './utils/diceParser'
+import { ErrorPopup } from './components/ErrorPopup'
 //import './App.css'
 
 type RollHistoryEntry = RollResult & { id: number }
@@ -15,6 +16,7 @@ function App() {
   const [nextId, setNextId] = useState(0)
   const [formula, setFormula] = useState('')
   const [favourites, setFavourites] = useState<Array<RollResult & { id: number, label: string }>>([])
+  const [error, setError] = useState<string | null>(null)
 
   const handleRoll = (formula: string) => {
     try {
@@ -23,9 +25,9 @@ function App() {
       setRollCount(prev => prev + 1)
       setRollHistory(prev => [{...result, id: nextId}, ...prev])
       setNextId(prev => prev + 1)
+      setError(null)
     } catch (error) {
-      // We'll add proper error handling later
-      console.error(error)
+      setError(error instanceof Error ? error.message : 'Invalid dice formula')
     }
   }
 
@@ -80,6 +82,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-800 text-white">
+      {error && <ErrorPopup message={error} onClose={() => setError(null)} />}
       <div className="p-8">
         <header className="text-center mb-8 text-sm">
           <h1 className="text-4xl font-bold mb-2">RPG Dice Roller</h1>
