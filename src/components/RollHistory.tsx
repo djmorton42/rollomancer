@@ -20,7 +20,7 @@ export function RollHistory({ rolls, onReroll, onClearEntry, onClearAll }: RollH
           Clear All
         </button>
       </div>
-      <div className="space-y-2 max-h-[600px] overflow-y-auto">
+      <div className="max-h-[300px] overflow-y-auto">
         <AnimatePresence mode="popLayout">
           {rolls.map((roll) => (
             <motion.div
