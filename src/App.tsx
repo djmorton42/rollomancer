@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { DiceInput } from './components/DiceInput'
 import { Results } from './components/Results'
 import { RollHistory } from './components/RollHistory'
+import { Favourites } from './components/Favourites'
 import { parseDiceFormula, type RollResult } from './utils/diceParser'
 //import './App.css'
 
@@ -13,6 +14,7 @@ function App() {
   const [rollHistory, setRollHistory] = useState<RollHistoryEntry[]>([])
   const [nextId, setNextId] = useState(0)
   const [formula, setFormula] = useState('')
+  const [favourites, setFavourites] = useState<Array<RollResult & { id: number, label: string }>>([])
 
   const handleRoll = (formula: string) => {
     try {
@@ -49,6 +51,20 @@ function App() {
     setRollHistory([]); // Clear all history entries
   };
 
+  const handleAddFavourite = (formula: string, label: string) => {
+    const result = parseDiceFormula(formula)
+    setFavourites(prev => [...prev, { ...result, id: nextId, label }])
+    setNextId(prev => prev + 1)
+  }
+
+  const handleClearFavourites = () => {
+    setFavourites([])
+  }
+
+  const handleRemoveFavourite = (id: number) => {
+    setFavourites(prev => prev.filter(entry => entry.id !== id))
+  }
+
   return (
     <div className="min-h-screen bg-slate-800 text-white">
       <div className="p-8">
@@ -58,7 +74,15 @@ function App() {
         </header>
         
         <div className="flex justify-center">
-          <main className="w-[1000px] flex gap-6">
+          <main className="w-[1350px] flex gap-6">
+            <div className="w-[350px] flex-shrink-0">
+              <Favourites 
+                favourites={favourites}
+                onRoll={handleRoll}
+                onRemove={handleRemoveFavourite}
+                onClearAll={handleClearFavourites}
+              />
+            </div>
             <div className="w-[600px] space-y-6 flex-shrink-0">
               <DiceInput 
                 formula={formula} 
@@ -66,7 +90,11 @@ function App() {
                 onRoll={handleRoll} 
                 onClear={handleClear} 
               />
-              <Results result={rollResult} rollId={rollCount} />
+              <Results 
+                result={rollResult} 
+                rollId={rollCount} 
+                onAddFavourite={handleAddFavourite}
+              />
             </div>
             <div className="w-[350px] flex-shrink-0">
               <RollHistory 

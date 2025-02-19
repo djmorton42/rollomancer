@@ -1,9 +1,11 @@
 import { type RollResult, type DiceGroupResult, type DiceOperator } from '../utils/diceParser'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useState } from 'react'
 
 interface ResultsProps {
   result: RollResult | null;
   rollId: number;
+  onAddFavourite: (formula: string, label: string) => void;
 }
 
 function getDiceStyles(operator: DiceOperator) {
@@ -82,7 +84,9 @@ function DiceGroup({ group, rollId }: { group: DiceGroupResult; rollId: number }
   )
 }
 
-export function Results({ result, rollId }: ResultsProps) {
+export function Results({ result, rollId, onAddFavourite }: ResultsProps) {
+  const [favouriteLabel, setFavouriteLabel] = useState('')
+
   if (!result) return null
 
   const groupsTotal = result.groups.reduce((sum, group) => sum + group.value, 0)
@@ -130,8 +134,31 @@ export function Results({ result, rollId }: ResultsProps) {
               Modifier: {modifier > 0 ? '+' : ''}{modifier}
             </div>
           )}
-          <div className="text-xl font-bold">
-            Total: {result.total}
+          <div className="flex items-center justify-between">
+            <div className="text-xl font-bold">
+              Total: {result.total}
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={favouriteLabel}
+                onChange={(e) => setFavouriteLabel(e.target.value)}
+                placeholder="Enter label for favourite"
+                className="px-2 py-1 text-sm rounded bg-slate-600 border border-slate-500 focus:border-blue-500 focus:outline-none"
+              />
+              <button
+                onClick={() => {
+                  if (favouriteLabel.trim()) {
+                    onAddFavourite(result.formula, favouriteLabel.trim())
+                    setFavouriteLabel('')
+                  }
+                }}
+                disabled={!favouriteLabel.trim()}
+                className="px-3 py-1 text-sm bg-green-600 hover:bg-green-700 disabled:bg-green-800 disabled:cursor-not-allowed rounded transition-colors"
+              >
+                Add to Favourites
+              </button>
+            </div>
           </div>
         </motion.div>
       </motion.div>
