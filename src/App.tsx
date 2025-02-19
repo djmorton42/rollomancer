@@ -38,6 +38,10 @@ function App() {
     setRollHistory(prev => prev.filter(entry => entry.id !== id))
   }
 
+  const handleClearAll = () => {
+    setRollHistory([]); // Clear all history entries
+  };
+
   return (
     <div className="min-h-screen bg-slate-800 text-white">
       <div className="p-8">
@@ -57,6 +61,7 @@ function App() {
                 rolls={rollHistory}
                 onReroll={handleReroll}
                 onClearEntry={handleClearHistoryEntry}
+                onClearAll={handleClearAll}
               />
             </div>
           </main>

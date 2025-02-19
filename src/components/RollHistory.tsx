@@ -5,12 +5,21 @@ interface RollHistoryProps {
   rolls: Array<RollResult & { id: number }>
   onReroll: (formula: string) => void
   onClearEntry: (id: number) => void
+  onClearAll: () => void
 }
 
-export function RollHistory({ rolls, onReroll, onClearEntry }: RollHistoryProps) {
+export function RollHistory({ rolls, onReroll, onClearEntry, onClearAll }: RollHistoryProps) {
   return (
     <div className="bg-slate-700 rounded-lg p-4 min-h-[400px]">
-      <h2 className="text-xl font-bold mb-4">Roll History</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-bold">Roll History</h2>
+        <button
+          onClick={onClearAll}
+          className="px-4 py-1 text-sm bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
+        >
+          Clear All
+        </button>
+      </div>
       <div className="space-y-2 max-h-[600px] overflow-y-auto">
         <AnimatePresence mode="popLayout">
           {rolls.map((roll) => (
@@ -53,7 +62,7 @@ export function RollHistory({ rolls, onReroll, onClearEntry }: RollHistoryProps)
               ] as unknown as AnimationProps['exit']}
               className="relative p-3 rounded group overflow-hidden"
             >
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center text-xs">
                 <span className="text-slate-300">{roll.formula}</span>
                 <span className="font-bold">{roll.total}</span>
               </div>
@@ -61,13 +70,13 @@ export function RollHistory({ rolls, onReroll, onClearEntry }: RollHistoryProps)
                 <div className="flex gap-2">
                   <button
                     onClick={() => onReroll(roll.formula)}
-                    className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 rounded transition-colors"
+                    className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded transition-colors"
                   >
                     Reroll
                   </button>
                   <button
                     onClick={() => onClearEntry(roll.id)}
-                    className="px-3 py-1 text-sm bg-slate-600 hover:bg-slate-700 rounded transition-colors"
+                    className="px-3 py-1 text-xs bg-slate-600 hover:bg-slate-700 rounded transition-colors"
                   >
                     Clear
                   </button>
