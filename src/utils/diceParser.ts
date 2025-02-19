@@ -82,30 +82,29 @@ function parseOneGroup(groupStr: string): DiceGroupResult {
 }
 
 export function parseDiceFormula(formula: string): RollResult {
-    // Store the original formula for display
     const displayFormula = formula.replace(/\s+/g, '')
-    
-    // Convert minuses to '+-' for parsing, but only internally
-    const workingFormula = displayFormula.replace(/\s*-\s*/g, '+-')
-    
-    // Split into parts that might be dice or modifiers
-    const parts = workingFormula.split('+')
-    
-    const diceRegex = /^[<>]?\d+d\d+$/i
-    const numberRegex = /^-?\d+$/
+    const parts = displayFormula.split(/(?=[-+])/)
     
     const groups: DiceGroupResult[] = []
     let modifier = 0
 
     for (const part of parts) {
-        if (diceRegex.test(part)) {
-            groups.push(parseOneGroup(part))
-        } else if (numberRegex.test(part)) {
-            modifier += parseInt(part)
-        } else if (part === '') {
+        const isSubtraction = part.startsWith('-')
+        const cleanPart = part.replace(/^[+-]/, '')
+
+        if (/^[<>]?\d+d\d+$/i.test(cleanPart)) {
+            const group = parseOneGroup(cleanPart)
+            if (isSubtraction) {
+                group.value = -group.value
+            }
+            groups.push(group)
+        } else if (/^\d+$/.test(cleanPart)) {
+            const num = parseInt(cleanPart)
+            modifier += isSubtraction ? -num : num
+        } else if (cleanPart === '') {
             continue
         } else {
-            throw new Error(`Invalid formula part: ${part}`)
+            throw new Error(`Invalid formula part: ${cleanPart}`)
         }
     }
 
@@ -113,11 +112,9 @@ export function parseDiceFormula(formula: string): RollResult {
         throw new Error('No valid dice groups found in formula')
     }
 
-    const groupsTotal = groups.reduce((sum, group) => sum + group.value, 0)
-
     return {
         groups,
-        total: groupsTotal + modifier,
-        formula: displayFormula  // Use the original, cleaned formula for display
+        total: groups.reduce((sum, group) => sum + group.value, 0) + modifier,
+        formula: displayFormula
     }
 } 

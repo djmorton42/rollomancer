@@ -145,6 +145,56 @@ describe('diceParser', () => {
         })
     })
 
+    describe('formulas subtracting one gropu from another', () => {
+        beforeEach(() => {
+          vi.spyOn(Math, 'random')
+            // First group (6d6)
+
+            .mockReturnValueOnce(0.066) // 1
+            .mockReturnValueOnce(0.362) // 3
+            .mockReturnValueOnce(0.786) // 5
+            .mockReturnValueOnce(0.225) // 2
+            .mockReturnValueOnce(0.557) // 4
+            .mockReturnValueOnce(0.287) // 2
+         
+            // Second group (1d4)
+            .mockReturnValueOnce(0.449) // 2
+        })
+
+        it('correctly evaluates formulas with subtracting one group from another like  "6d6 - 1d4"', () => {
+            const result = parseDiceFormula('6d6 - 1d4')
+            
+            expect(result.formula).toBe('6d6-1d4')
+            expect(result.groups).toHaveLength(2)
+            
+            // First group (6d6)
+            expect(result.groups[0].value).toBe(17) // 1 + 3 + 5 + 2 + 4 + 2
+            
+            // Second group (1d4)
+            expect(result.groups[1].value).toBe(-2) // -2
+            
+            // Total with modifier
+            expect(result.total).toBe(15) // 17 - 2
+        }) 
+
+        it('correctly evaluates formulas with subtracting one group from another with a positive modifier like  "6d6 - 1d4 + 1"', () => {
+            const result = parseDiceFormula('6d6 - 1d4 + 1')
+            
+            expect(result.formula).toBe('6d6-1d4+1')
+            expect(result.groups).toHaveLength(2)
+            
+            // First group (6d6)
+            expect(result.groups[0].value).toBe(17) // 1 + 3 + 5 + 2 + 4 + 2
+            
+            // Second group (1d4)
+            expect(result.groups[1].value).toBe(-2) // -2
+
+            // Total with modifier
+            expect(result.total).toBe(16) // 17 - 2 + 1
+        })
+    })
+
+
     describe('complex formulas', () => {
         beforeEach(() => {
           vi.spyOn(Math, 'random')
@@ -205,7 +255,7 @@ describe('diceParser', () => {
             
             // Total with modifier
             expect(result.total).toBe(25) // 14 + 12 -1
-        })        
+        })               
 
         it('correctly evaluates "<3d10 + >2d8"', () => {
           const result = parseDiceFormula('<3d10 + >2d8')
