@@ -12,6 +12,7 @@ function App() {
   const [rollCount, setRollCount] = useState(0)
   const [rollHistory, setRollHistory] = useState<RollHistoryEntry[]>([])
   const [nextId, setNextId] = useState(0)
+  const [formula, setFormula] = useState('')
 
   const handleRoll = (formula: string) => {
     try {
@@ -24,6 +25,12 @@ function App() {
       // We'll add proper error handling later
       console.error(error)
     }
+  }
+
+  const handleView = (roll: RollResult) => {
+    setFormula(roll.formula)
+    setRollResult(roll)
+    setRollCount(prev => prev + 1) // Trigger animation without adding to history
   }
 
   const handleClear = () => {
@@ -53,13 +60,19 @@ function App() {
         <div className="flex justify-center">
           <main className="w-[1000px] flex gap-6">
             <div className="w-[600px] space-y-6 flex-shrink-0">
-              <DiceInput onRoll={handleRoll} onClear={handleClear} />
+              <DiceInput 
+                formula={formula} 
+                setFormula={setFormula}
+                onRoll={handleRoll} 
+                onClear={handleClear} 
+              />
               <Results result={rollResult} rollId={rollCount} />
             </div>
             <div className="w-[350px] flex-shrink-0">
               <RollHistory 
                 rolls={rollHistory}
                 onReroll={handleReroll}
+                onView={handleView}
                 onClearEntry={handleClearHistoryEntry}
                 onClearAll={handleClearAll}
               />
