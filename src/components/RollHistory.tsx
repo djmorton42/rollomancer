@@ -59,15 +59,45 @@ export function RollHistory({ rolls, onReroll, onView, onClearEntry, onClearAll 
         </button>
       </div>
       <div className="max-h-[300px] overflow-y-auto">
-        <AnimatePresence>
+        <AnimatePresence mode="popLayout">
           {rolls.map((roll) => (
             <motion.div
               key={roll.id}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -100 }}
-              transition={{ duration: 0.3 }}
-              className="p-2 bg-slate-800 rounded group relative"
+              initial={{ 
+                opacity: 0, 
+                x: 20,
+                backgroundColor: 'rgb(30 41 59)' // slate-800
+              }}
+              animate={{ 
+                opacity: 1, 
+                x: 0, 
+                height: 'auto',
+                backgroundColor: 'rgb(30 41 59)', // slate-800
+                transition: { duration: 0.3 }
+              }}
+              exit={[
+                {
+                  backgroundColor: 'rgb(153 27 27)', // red-700
+                  transition: { duration: 2.0 }
+                },
+                {
+                  opacity: 0,
+                  x: -100,
+                  height: 0,
+                  marginTop: 0,
+                  marginBottom: 0,
+                  backgroundColor: 'rgb(153 27 27)', // Keep the red color during slide-out
+                  transition: {
+                    duration: 1.0,
+                    opacity: { duration: 1.0 },
+                    x: { duration: 1.0 },
+                    height: { duration: 2.0, delay: 0.1 },
+                    marginTop: { duration: 2.0, delay: 0.1 },
+                    marginBottom: { duration: 2.0, delay: 0.1 }
+                  }
+                }
+              ] as unknown as AnimationProps['exit']}
+              className="relative p-2 rounded group overflow-hidden"
               onMouseEnter={() => handleMouseEnter(roll)}
               onMouseLeave={handleMouseLeave}
             >
