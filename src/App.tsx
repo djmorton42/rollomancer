@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { DiceInput } from './components/DiceInput'
 import { Results } from './components/Results'
 import { RollHistory } from './components/RollHistory'
 import { Favourites } from './components/Favourites'
 import { parseDiceFormula, type RollResult } from './utils/diceParser'
 import { ErrorPopup } from './components/ErrorPopup'
+import { loadFromStorage, saveToStorage } from './utils/storage'
 //import './App.css'
 
 type RollHistoryEntry = RollResult & { id: number }
@@ -12,11 +13,29 @@ type RollHistoryEntry = RollResult & { id: number }
 function App() {
   const [rollResult, setRollResult] = useState<RollResult | null>(null)
   const [rollCount, setRollCount] = useState(0)
-  const [rollHistory, setRollHistory] = useState<RollHistoryEntry[]>([])
-  const [nextId, setNextId] = useState(0)
+  const [rollHistory, setRollHistory] = useState<RollHistoryEntry[]>(() => 
+    loadFromStorage('dice-roller-history', [])
+  )
+  const [nextId, setNextId] = useState(() => 
+    loadFromStorage('dice-roller-next-id', 0)
+  )
   const [formula, setFormula] = useState('')
-  const [favourites, setFavourites] = useState<Array<RollResult & { id: number, label: string }>>([])
+  const [favourites, setFavourites] = useState<Array<RollResult & { id: number, label: string }>>(() =>
+    loadFromStorage('dice-roller-favourites', [])
+  )
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    saveToStorage('dice-roller-history', rollHistory)
+  }, [rollHistory])
+
+  useEffect(() => {
+    saveToStorage('dice-roller-favourites', favourites)
+  }, [favourites])
+
+  useEffect(() => {
+    saveToStorage('dice-roller-next-id', nextId)
+  }, [nextId])
 
   const handleRoll = (formula: string) => {
     try {
