@@ -14,27 +14,27 @@ function App() {
   const [rollResult, setRollResult] = useState<RollResult | null>(null)
   const [rollCount, setRollCount] = useState(0)
   const [rollHistory, setRollHistory] = useState<RollHistoryEntry[]>(() => 
-    loadFromStorage('dice-roller-history', [])
+    loadFromStorage('HISTORY', [])
   )
   const [nextId, setNextId] = useState(() => 
-    loadFromStorage('dice-roller-next-id', 0)
+    loadFromStorage('NEXT_ID', 0)
   )
   const [formula, setFormula] = useState('')
   const [favourites, setFavourites] = useState<Array<RollResult & { id: number, label: string }>>(() =>
-    loadFromStorage('dice-roller-favourites', [])
+    loadFromStorage('FAVOURITES', [])
   )
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    saveToStorage('dice-roller-history', rollHistory)
+    saveToStorage('HISTORY', rollHistory)
   }, [rollHistory])
 
   useEffect(() => {
-    saveToStorage('dice-roller-favourites', favourites)
+    saveToStorage('FAVOURITES', favourites)
   }, [favourites])
 
   useEffect(() => {
-    saveToStorage('dice-roller-next-id', nextId)
+    saveToStorage('NEXT_ID', nextId)
   }, [nextId])
 
   const handleRoll = (formula: string) => {

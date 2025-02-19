@@ -1,4 +1,4 @@
-import { motion, AnimatePresence, Variant, AnimationProps } from 'framer-motion'
+import { motion, AnimatePresence, AnimationProps } from 'framer-motion'
 import type { RollResult } from '../utils/diceParser'
 import { useState } from 'react'
 

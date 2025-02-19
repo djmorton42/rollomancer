@@ -46,7 +46,6 @@ function computeGroupValue(dice: DieResult[], operator: DiceOperator): number {
 
 export function createDiceGroup(count: number, sides: number, operator: DiceOperator = 'sum'): DiceGroupResult {
     const dice = Array.from({ length: count }, () => rollDie(sides))
-    console.log('Dice Rolled: ', dice)
     return {
         dice,
         sides,
