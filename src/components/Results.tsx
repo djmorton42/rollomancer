@@ -6,6 +6,7 @@ interface ResultsProps {
   result: RollResult | null;
   rollId: number;
   onAddFavourite: (formula: string, label: string) => void;
+  favouriteLabel?: string;
 }
 
 function getDiceStyles(operator: DiceOperator) {
@@ -84,8 +85,8 @@ function DiceGroup({ group, rollId }: { group: DiceGroupResult; rollId: number }
   )
 }
 
-export function Results({ result, rollId, onAddFavourite }: ResultsProps) {
-  const [favouriteLabel, setFavouriteLabel] = useState('')
+export function Results({ result, rollId, onAddFavourite, favouriteLabel }: ResultsProps) {
+  const [newFavouriteLabel, setNewFavouriteLabel] = useState('')
 
   if (!result) return null
 
@@ -109,6 +110,11 @@ export function Results({ result, rollId, onAddFavourite }: ResultsProps) {
           className="mb-4"
         >
           <h2 className="text-xl font-bold mb-2">Roll Results</h2>
+          {favouriteLabel && (
+            <div className="text-emerald-400 text-sm mb-2">
+              Favourite: {favouriteLabel}
+            </div>
+          )}
           <div className="text-slate-300">Formula: {result.formula}</div>
         </motion.div>
 
@@ -141,19 +147,19 @@ export function Results({ result, rollId, onAddFavourite }: ResultsProps) {
             <div className="flex gap-2">
               <input
                 type="text"
-                value={favouriteLabel}
-                onChange={(e) => setFavouriteLabel(e.target.value)}
+                value={newFavouriteLabel}
+                onChange={(e) => setNewFavouriteLabel(e.target.value)}
                 placeholder="Enter label for favourite"
                 className="px-2 py-1 text-sm rounded bg-slate-600 border border-slate-500 focus:border-blue-500 focus:outline-none"
               />
               <button
                 onClick={() => {
-                  if (favouriteLabel.trim()) {
-                    onAddFavourite(result.formula, favouriteLabel.trim())
-                    setFavouriteLabel('')
+                  if (newFavouriteLabel.trim()) {
+                    onAddFavourite(result.formula, newFavouriteLabel.trim())
+                    setNewFavouriteLabel('')
                   }
                 }}
-                disabled={!favouriteLabel.trim()}
+                disabled={!newFavouriteLabel.trim()}
                 className="px-3 py-1 text-sm bg-green-600 hover:bg-green-700 disabled:bg-green-800 disabled:cursor-not-allowed rounded transition-colors"
               >
                 Add to Favourites

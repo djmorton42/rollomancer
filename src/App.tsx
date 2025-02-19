@@ -65,11 +65,23 @@ function App() {
     setFavourites(prev => prev.filter(entry => entry.id !== id))
   }
 
+  const handleRollFavourite = (formula: string, label: string) => {
+    try {
+      const result = parseDiceFormula(formula)
+      setRollResult({ ...result, favouriteLabel: label })
+      setRollCount(prev => prev + 1)
+      setRollHistory(prev => [{...result, id: nextId}, ...prev])
+      setNextId(prev => prev + 1)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-800 text-white">
       <div className="p-8">
         <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2">Fantasy Dice Roller</h1>
+          <h1 className="text-4xl font-bold mb-2">RPG Dice Roller</h1>
           <p className="text-slate-300">Roll any combination of dice with ease</p>
         </header>
         
@@ -78,7 +90,7 @@ function App() {
             <div className="w-[350px] flex-shrink-0">
               <Favourites 
                 favourites={favourites}
-                onRoll={handleRoll}
+                onRoll={(formula, label) => handleRollFavourite(formula, label)}
                 onRemove={handleRemoveFavourite}
                 onClearAll={handleClearFavourites}
               />
@@ -94,6 +106,7 @@ function App() {
                 result={rollResult} 
                 rollId={rollCount} 
                 onAddFavourite={handleAddFavourite}
+                favouriteLabel={rollResult?.favouriteLabel}
               />
             </div>
             <div className="w-[350px] flex-shrink-0">

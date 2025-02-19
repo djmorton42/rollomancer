@@ -21,6 +21,7 @@ export interface RollResult {
     groups: DiceGroupResult[]
     total: number
     formula: string
+    favouriteLabel?: string
 }
 
 export function rollDie(sides: number): DieResult {

@@ -8,7 +8,7 @@ interface FavouriteEntry extends RollResult {
 
 interface FavouritesProps {
   favourites: FavouriteEntry[]
-  onRoll: (formula: string) => void
+  onRoll: (formula: string, label: string) => void
   onRemove: (id: number) => void
   onClearAll: () => void
 }
@@ -73,7 +73,7 @@ export function Favourites({ favourites, onRoll, onRemove, onClearAll }: Favouri
               <div className="absolute inset-0 flex items-center justify-end px-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800/80">
                 <div className="flex gap-1">
                   <button
-                    onClick={() => onRoll(favourite.formula)}
+                    onClick={() => onRoll(favourite.formula, favourite.label)}
                     className="px-2 py-0.5 text-xs bg-blue-600 hover:bg-blue-700 rounded transition-colors"
                   >
                     Roll
