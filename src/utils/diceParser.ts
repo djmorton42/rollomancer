@@ -14,6 +14,7 @@ export interface DiceGroupResult {
     count: number
     operator: DiceOperator
     value: number // The computed value after applying the operator
+    average: number // The expected average value for this dice group
 }
 
 // The complete result of evaluating a formula
@@ -44,6 +45,24 @@ function computeGroupValue(dice: DieResult[], operator: DiceOperator): number {
     }
 }
 
+function calculateExpectedAverage(count: number, sides: number, operator: DiceOperator): number {
+    switch (operator) {
+        case 'sum':
+            return (sides + 1) / 2 * count
+        case 'greatest': {
+            const term = (1 - 1.0 / (2 * sides))
+            return sides * (1 - (1.0 / (count + 1)) * Math.pow(term, count + 1))
+        }
+        case 'least': {
+            const term = (1 - 1.0 / (2 * sides))
+            const greatestAvg = sides * (1 - (1.0 / (count + 1)) * Math.pow(term, count + 1))
+            return sides + 1 - greatestAvg
+        }
+        default:
+            throw new Error(`Unknown operator: ${operator}`)
+    }
+}
+
 export function createDiceGroup(count: number, sides: number, operator: DiceOperator = 'sum'): DiceGroupResult {
     const dice = Array.from({ length: count }, () => rollDie(sides))
     return {
@@ -51,7 +70,8 @@ export function createDiceGroup(count: number, sides: number, operator: DiceOper
         sides,
         count,
         operator,
-        value: computeGroupValue(dice, operator)
+        value: computeGroupValue(dice, operator),
+        average: calculateExpectedAverage(count, sides, operator)
     }
 }
 

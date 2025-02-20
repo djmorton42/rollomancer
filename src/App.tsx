@@ -105,8 +105,6 @@ function App() {
       <div className="p-8">
         <header className="text-center mb-8 text-sm">
           <h1 className="text-4xl font-bold mb-2">RPG Dice Roller</h1>
-          <p className="text-slate-300">Enter a dice formula (ie. 5d6 + 1d8 + 3).<br />Prefix with &lt; to take the least of the group (&lt;2d20).<br />
-           Prefix with &gt; to take the greatest of the group (&gt;2d20).</p>
         </header>
         
         <div className="flex justify-center">

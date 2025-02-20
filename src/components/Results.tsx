@@ -91,7 +91,9 @@ export function Results({ result, rollId, onAddFavourite, favouriteLabel }: Resu
   if (!result) return null
 
   const groupsTotal = result.groups.reduce((sum, group) => sum + group.value, 0)
+  const groupsAverage = result.groups.reduce((sum, group) => sum + group.average, 0)
   const modifier = result.total - groupsTotal
+  const totalAverage = groupsAverage + modifier
 
   return (
     <AnimatePresence mode="wait">
@@ -141,8 +143,13 @@ export function Results({ result, rollId, onAddFavourite, favouriteLabel }: Resu
             </div>
           )}
           <div className="flex items-center justify-between">
-            <div className="text-xl font-bold">
-              Total: {result.total}
+            <div>
+              <div className="text-xl font-bold">
+                Total: {result.total}
+              </div>
+              <div className="text-sm text-slate-400">
+                Expected Average: {Math.floor(totalAverage)}
+              </div>
             </div>
             <div className="flex gap-2">
               <input
