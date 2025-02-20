@@ -62,6 +62,7 @@ function App() {
   }
 
   const handleReroll = (formula: string) => {
+    setFormula(formula)
     handleRoll(formula)
   }
 
@@ -89,6 +90,7 @@ function App() {
 
   const handleRollFavourite = (formula: string, label: string) => {
     try {
+      setFormula(formula)
       const result = parseDiceFormula(formula)
       setRollResult({ ...result, favouriteLabel: label })
       setRollCount(prev => prev + 1)

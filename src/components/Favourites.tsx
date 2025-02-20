@@ -91,7 +91,7 @@ export function Favourites({ favourites, onRoll, onRemove, onClearAll }: Favouri
                       onClick={() => onRemove(favourite.id)}
                       className="px-2 py-0.5 text-xs bg-slate-600 hover:bg-slate-700 rounded transition-colors"
                     >
-                      Remove
+                      Clear
                     </button>
                   </div>
                 </div>
