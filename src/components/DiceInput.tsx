@@ -60,7 +60,7 @@ export function DiceInput({ formula, setFormula, onRoll, onClear }: DiceInputPro
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute top-full mt-2 right-0 w-[35rem] p-4 bg-slate-700 rounded-lg shadow-lg border border-slate-600 z-10"
+            className="absolute top-full mt-2 right-0 w-full max-w-[35rem] p-4 bg-slate-700 rounded-lg shadow-lg border border-slate-600 z-10"
           >
             <h3 className="font-bold mb-2">Example Dice Formulas</h3>
             <div className="space-y-1 text-sm text-slate-300">

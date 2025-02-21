@@ -104,22 +104,14 @@ function App() {
   return (
     <div className="min-h-screen bg-slate-800 text-white">
       {error && <ErrorPopup message={error} onClose={() => setError(null)} />}
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <header className="text-center mb-8 text-sm">
-          <h1 className="text-4xl font-bold mb-2">RPG Dice Roller</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2">RPG Dice Roller</h1>
         </header>
         
         <div className="flex justify-center">
-          <main className="w-[1350px] flex gap-6">
-            <div className="w-[350px] flex-shrink-0">
-              <Favourites 
-                favourites={favourites}
-                onRoll={(formula, label) => handleRollFavourite(formula, label)}
-                onRemove={handleRemoveFavourite}
-                onClearAll={handleClearFavourites}
-              />
-            </div>
-            <div className="w-[600px] space-y-6 flex-shrink-0">
+          <main className="w-full max-w-[1350px] flex flex-col lg:flex-row gap-4 lg:gap-6">
+            <div className="w-full lg:w-[600px] order-1 lg:order-2 space-y-4 lg:space-y-6 lg:flex-shrink-0">
               <DiceInput 
                 formula={formula} 
                 setFormula={setFormula}
@@ -133,7 +125,15 @@ function App() {
                 favouriteLabel={rollResult?.favouriteLabel}
               />
             </div>
-            <div className="w-[350px] flex-shrink-0">
+            <div className="w-full lg:w-[350px] order-2 lg:order-1 lg:flex-shrink-0">
+              <Favourites 
+                favourites={favourites}
+                onRoll={(formula, label) => handleRollFavourite(formula, label)}
+                onRemove={handleRemoveFavourite}
+                onClearAll={handleClearFavourites}
+              />
+            </div>
+            <div className="w-full lg:w-[350px] order-3 lg:order-3 lg:flex-shrink-0">
               <RollHistory 
                 rolls={rollHistory}
                 onReroll={handleReroll}
