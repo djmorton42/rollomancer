@@ -62,12 +62,12 @@ export function RollHistory({ rolls, onReroll, onView, onClearEntry, onClearAll 
               ] as unknown as AnimationProps['exit']}
               className="relative p-2 rounded group overflow-hidden"
             >
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-300">{roll.formula}</span>
-                <span className="font-medium">{roll.total}</span>
+              <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center text-xs">
+                <span>{roll.formula}</span>
+                <span className="font-medium mt-1 lg:mt-0">{roll.total}</span>
               </div>
-              <div className="absolute inset-0 flex items-center justify-end px-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800/80">
-                <div className="flex gap-1">
+              <div className="absolute inset-0 flex items-center justify-end px-2 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-1 bg-slate-800 px-2 py-1 rounded">
                   <button
                     onClick={() => onReroll(roll.formula)}
                     className="px-2 py-0.5 text-xs bg-blue-600 hover:bg-blue-700 rounded transition-colors"
