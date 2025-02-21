@@ -142,9 +142,9 @@ export function Results({ result, rollId, onAddFavourite, favouriteLabel }: Resu
               Modifier: {modifier > 0 ? '+' : ''}{modifier}
             </div>
           )}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-2">
             <div>
-              <div className="text-xl font-bold">
+              <div className="text-3xl font-bold text-white">
                 Total: {result.total}
               </div>
               <div className="text-sm text-slate-400">
@@ -157,7 +157,7 @@ export function Results({ result, rollId, onAddFavourite, favouriteLabel }: Resu
                 value={newFavouriteLabel}
                 onChange={(e) => setNewFavouriteLabel(e.target.value)}
                 placeholder="Enter label for favourite"
-                className="px-2 py-1 text-sm rounded bg-slate-600 border border-slate-500 focus:border-blue-500 focus:outline-none"
+                className="px-2 py-1 text-sm rounded bg-slate-600 border border-slate-500 focus:border-blue-500 focus:outline-none flex-1 lg:flex-none"
               />
               <button
                 onClick={() => {
@@ -167,7 +167,7 @@ export function Results({ result, rollId, onAddFavourite, favouriteLabel }: Resu
                   }
                 }}
                 disabled={!newFavouriteLabel.trim()}
-                className="px-3 py-1 text-sm bg-green-600 hover:bg-green-700 disabled:bg-green-800 disabled:cursor-not-allowed rounded transition-colors"
+                className="px-3 py-1 text-sm bg-green-600 hover:bg-green-700 disabled:bg-green-800 disabled:cursor-not-allowed rounded transition-colors whitespace-nowrap"
               >
                 Add to Favourites
               </button>
