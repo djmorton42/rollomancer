@@ -15,7 +15,7 @@ interface FavouritesProps {
 
 export function Favourites({ favourites, onRoll, onRemove, onClearAll }: FavouritesProps) {
   return (
-    <div className="bg-slate-700 rounded-lg p-4 min-h-[400px] relative">
+    <div className="bg-slate-700 rounded-lg p-4 lg:min-h-[400px] relative">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold">Favourites</h2>
         <button

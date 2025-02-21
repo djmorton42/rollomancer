@@ -11,7 +11,7 @@ interface RollHistoryProps {
 
 export function RollHistory({ rolls, onReroll, onView, onClearEntry, onClearAll }: RollHistoryProps) {
   return (
-    <div className="bg-slate-700 rounded-lg p-4 min-h-[400px] relative">
+    <div className="bg-slate-700 rounded-lg p-4 lg:min-h-[400px] relative">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold">Roll History</h2>
         <button
