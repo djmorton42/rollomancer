@@ -84,10 +84,16 @@ export function Stats({ stats, formula }: StatsProps) {
 
       <div className="mt-4">
         <h3 className="font-bold mb-2">Distribution</h3>
-        <div className="h-40 flex items-end gap-1">
-          {Array.from(stats.frequencies.entries()).map(([value, frequency]) => {
+        <div className="h-40 flex items-end gap-1 relative">
+          {Array.from(stats.frequencies.entries()).map(([value, frequency], index, array) => {
             const height = getHeight(frequency);
             const backgroundColor = getColor(frequency);
+            const isKeyPoint = (
+              index === 0 || // leftmost
+              index === Math.floor(array.length / 2) || // middle
+              index === array.length - 1 // rightmost
+            );
+            
             return (
               <div
                 key={value}
@@ -100,10 +106,16 @@ export function Stats({ stats, formula }: StatsProps) {
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 px-2 py-1 rounded text-xs whitespace-nowrap">
                   {value}: {frequency} ({(frequency/stats.totalRolls * 100).toFixed(1)}%)
                 </div>
+                {isKeyPoint && (
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 text-xs text-slate-400">
+                    {value}
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
+        <div className="h-6" /> {/* Spacing for labels */}
       </div>
     </motion.div>
   );
