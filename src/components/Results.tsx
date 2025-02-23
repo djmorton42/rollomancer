@@ -148,6 +148,17 @@ export function Results({ result, rollId, onAddFavourite, favouriteLabel }: Resu
                 Total: {result.total}
               </div>
               <div className="text-sm text-slate-400">
+                {result.total % 2 === 0 ? (
+                  <span>Half: {result.total / 2}</span>
+                ) : (
+                  <>
+                    <span>Half (↓{Math.floor(result.total / 2)}</span>
+                    <span className="mx-1">·</span>
+                    <span>↑{Math.ceil(result.total / 2)})</span>
+                  </>
+                )}
+              </div>
+              <div className="text-sm text-slate-400 mt-2">
                 Expected Average: {Math.floor(totalAverage)}
               </div>
             </div>
