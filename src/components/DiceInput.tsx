@@ -21,9 +21,9 @@ export function DiceInput({ formula, setFormula, onRoll, onStats, onClear }: Dic
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mb-6 relative">
-      <div className="flex gap-2">
-        <div className="flex-1 relative">
+    <form onSubmit={handleSubmit} className="mb-6 relative space-y-2 md:space-y-0">
+      <div className="flex flex-col md:flex-row gap-2">
+        <div className="relative flex-1">
           <input
             ref={inputRef}
             type="text"
@@ -40,26 +40,28 @@ export function DiceInput({ formula, setFormula, onRoll, onStats, onClear }: Dic
             ?
           </div>
         </div>
-        <button
-          type="submit"
-          className="px-6 py-2 bg-blue-600 rounded hover:bg-blue-700 transition-colors"
-        >
-          Roll
-        </button>
-        <button
-          type="button"
-          onClick={() => formula.trim() && onStats(formula.trim())}
-          className="px-6 py-2 bg-emerald-600 rounded hover:bg-emerald-700 transition-colors"
-        >
-          Stats
-        </button>
-        <button
-          type="button"
-          onClick={onClear}
-          className="px-6 py-2 bg-slate-600 rounded hover:bg-slate-700 transition-colors"
-        >
-          Clear
-        </button>
+        <div className="flex gap-2 md:w-auto">
+          <button
+            type="submit"
+            className="flex-1 md:flex-none px-6 py-2 bg-blue-600 rounded hover:bg-blue-700 transition-colors whitespace-nowrap"
+          >
+            Roll
+          </button>
+          <button
+            type="button"
+            onClick={() => formula.trim() && onStats(formula.trim())}
+            className="flex-1 md:flex-none px-6 py-2 bg-emerald-600 rounded hover:bg-emerald-700 transition-colors whitespace-nowrap"
+          >
+            Stats
+          </button>
+          <button
+            type="button"
+            onClick={onClear}
+            className="flex-1 md:flex-none px-6 py-2 bg-slate-600 rounded hover:bg-slate-700 transition-colors whitespace-nowrap"
+          >
+            Clear
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>
