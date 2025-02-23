@@ -3,9 +3,11 @@ import { DiceInput } from './components/DiceInput'
 import { Results } from './components/Results'
 import { RollHistory } from './components/RollHistory'
 import { Favourites } from './components/Favourites'
-import { parseDiceFormula, type RollResult } from './utils/diceParser'
+import { HistogramResult, parseDiceFormula, type RollResult, calculateHistogram } from './utils/diceParser'
 import { ErrorPopup } from './components/ErrorPopup'
 import { loadFromStorage, saveToStorage } from './utils/storage'
+import { AnimatePresence } from 'framer-motion'
+import { Stats } from './components/Stats'
 //import './App.css'
 
 type RollHistoryEntry = RollResult & { id: number }
@@ -23,6 +25,8 @@ function App() {
   const [favourites, setFavourites] = useState<Array<RollResult & { id: number, label: string }>>(() =>
     loadFromStorage('FAVOURITES', [])
   )
+  const [showStats, setShowStats] = useState(false)
+  const [statsResult, setStatsResult] = useState<HistogramResult | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -44,6 +48,8 @@ function App() {
       setRollCount(prev => prev + 1)
       setRollHistory(prev => [{...result, id: nextId}, ...prev])
       setNextId(prev => prev + 1)
+      setStatsResult(null)
+      setShowStats(false)
       setError(null)
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Invalid dice formula')
@@ -58,6 +64,8 @@ function App() {
 
   const handleClear = () => {
     setRollResult(null)
+    setStatsResult(null)
+    setShowStats(false)
     setFormula('')
   }
 
@@ -101,12 +109,25 @@ function App() {
     }
   }
 
+  const handleStats = (formula: string) => {
+    try {
+      const stats = calculateHistogram(formula)
+      setStatsResult(stats)
+      setShowStats(true)
+      setRollResult(null)
+      setError(null)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Invalid dice formula')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-800 text-white">
       {error && <ErrorPopup message={error} onClose={() => setError(null)} />}
       <div className="p-4 sm:p-8">
         <header className="text-center mb-8 text-sm">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">RPG Dice Roller</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2">Rollomancer</h1>
+          <h2 className="text-xl sm:text-2xl font-bold mb-2">RPG Dice Roller</h2>
         </header>
         
         <div className="flex justify-center">
@@ -116,14 +137,21 @@ function App() {
                 formula={formula} 
                 setFormula={setFormula}
                 onRoll={handleRoll} 
+                onStats={handleStats}
                 onClear={handleClear} 
               />
-              <Results 
-                result={rollResult} 
-                rollId={rollCount} 
-                onAddFavourite={handleAddFavourite}
-                favouriteLabel={rollResult?.favouriteLabel}
-              />
+              <AnimatePresence mode="wait">
+                {showStats && statsResult ? (
+                  <Stats stats={statsResult} formula={formula} />
+                ) : (
+                  <Results 
+                    result={rollResult} 
+                    rollId={rollCount} 
+                    onAddFavourite={handleAddFavourite}
+                    favouriteLabel={rollResult?.favouriteLabel}
+                  />
+                )}
+              </AnimatePresence>
             </div>
             <div className="w-full lg:w-[350px] order-2 lg:order-1 lg:flex-shrink-0">
               <Favourites 

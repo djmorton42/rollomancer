@@ -136,4 +136,83 @@ export function parseDiceFormula(formula: string): RollResult {
         total: groups.reduce((sum, group) => sum + group.value, 0) + modifier,
         formula: displayFormula
     }
+}
+
+export interface HistogramResult {
+  min: number;
+  max: number;
+  frequencies: Map<number, number>;
+  totalRolls: number;
+  mean: number;
+  standardDeviation: number;
+  percentiles: {
+    p25: number;
+    p50: number;
+    p75: number;
+    p90: number;
+    p95: number;
+    p99: number;
+  };
+}
+
+export function calculateHistogram(formula: string, iterations = 100000): HistogramResult {
+  const frequencies = new Map<number, number>();
+  const allValues: number[] = [];
+  let min = Number.MAX_SAFE_INTEGER;
+  let max = Number.MIN_SAFE_INTEGER;
+  let sum = 0;
+
+  // Collect all values and calculate initial statistics
+  for (let i = 0; i < iterations; i++) {
+    const result = parseDiceFormula(formula);
+    const total = result.total;
+    allValues.push(total);
+    sum += total;
+
+    // Update frequencies
+    frequencies.set(total, (frequencies.get(total) || 0) + 1);
+
+    // Update min/max
+    min = Math.min(min, total);
+    max = Math.max(max, total);
+  }
+
+  // Calculate mean
+  const mean = sum / iterations;
+
+  // Calculate standard deviation
+  const squaredDiffs = allValues.map(value => Math.pow(value - mean, 2));
+  const variance = squaredDiffs.reduce((acc, val) => acc + val, 0) / iterations;
+  const standardDeviation = Math.sqrt(variance);
+
+  // Sort values for percentile calculations
+  allValues.sort((a, b) => a - b);
+
+  // Calculate percentiles
+  const getPercentile = (p: number) => {
+    const index = Math.ceil((p / 100) * iterations) - 1;
+    return allValues[index];
+  };
+
+  // Sort the frequencies map by keys
+  const sortedFrequencies = new Map(
+    [...frequencies.entries()].sort((a, b) => a[0] - b[0])
+  );
+
+  return {
+    min,
+    max,
+    frequencies: sortedFrequencies,
+    totalRolls: iterations,
+    mean,
+    standardDeviation,
+    percentiles: {
+      p25: getPercentile(25),
+      p50: getPercentile(50),
+      p75: getPercentile(75),
+      p90: getPercentile(90),
+      p95: getPercentile(95),
+      p99: getPercentile(99)
+    }
+  };
 } 

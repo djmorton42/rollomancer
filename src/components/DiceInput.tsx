@@ -5,10 +5,11 @@ interface DiceInputProps {
   formula: string;
   setFormula: (formula: string) => void;
   onRoll: (formula: string) => void;
+  onStats: (formula: string) => void;
   onClear: () => void;
 }
 
-export function DiceInput({ formula, setFormula, onRoll, onClear }: DiceInputProps) {
+export function DiceInput({ formula, setFormula, onRoll, onStats, onClear }: DiceInputProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [showHelp, setShowHelp] = useState(false)
 
@@ -44,6 +45,13 @@ export function DiceInput({ formula, setFormula, onRoll, onClear }: DiceInputPro
           className="px-6 py-2 bg-blue-600 rounded hover:bg-blue-700 transition-colors"
         >
           Roll
+        </button>
+        <button
+          type="button"
+          onClick={() => formula.trim() && onStats(formula.trim())}
+          className="px-6 py-2 bg-emerald-600 rounded hover:bg-emerald-700 transition-colors"
+        >
+          Stats
         </button>
         <button
           type="button"
