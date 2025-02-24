@@ -104,6 +104,8 @@ function App() {
       setRollCount(prev => prev + 1)
       setRollHistory(prev => [{...result, id: nextId}, ...prev])
       setNextId(prev => prev + 1)
+      setStatsResult(null)
+      setShowStats(false)
     } catch (error) {
       console.error(error)
     }
