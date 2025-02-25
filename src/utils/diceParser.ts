@@ -45,25 +45,85 @@ function computeGroupValue(dice: DieResult[], operator: DiceOperator): number {
     }
 }
 
-function calculateExpectedAverage(count: number, sides: number, operator: DiceOperator): number {
+function calculateExpectedAverage(count: number, sides: number, operator: DiceOperator, takeCount?: number): number {
     switch (operator) {
         case 'sum':
             return (sides + 1) / 2 * count
         case 'greatest': {
-            const term = (1 - 1.0 / (2 * sides))
-            return sides * (1 - (1.0 / (count + 1)) * Math.pow(term, count + 1))
+            if (!takeCount || takeCount === 1) {
+                const term = (1 - 1.0 / (2 * sides))
+                return sides * (1 - (1.0 / (count + 1)) * Math.pow(term, count + 1))
+            }
+            
+            // For keeping N highest dice, we need to sum them
+            let sum = 0
+            const allCombinations = Math.pow(sides, count) // Total possible combinations
+            
+            // For each possible combination of dice
+            for (let i = 0; i < allCombinations; i++) {
+                const rolls: number[] = []
+                let temp = i
+                
+                // Convert number to dice rolls
+                for (let j = 0; j < count; j++) {
+                    rolls.push((temp % sides) + 1)
+                    temp = Math.floor(temp / sides)
+                }
+                
+                // Sort rolls in descending order and take highest N
+                rolls.sort((a, b) => b - a)
+                const value = rolls.slice(0, takeCount).reduce((a, b) => a + b, 0)
+                sum += value
+            }
+            
+            return sum / allCombinations
         }
         case 'least': {
-            const term = (1 - 1.0 / (2 * sides))
-            const greatestAvg = sides * (1 - (1.0 / (count + 1)) * Math.pow(term, count + 1))
-            return sides + 1 - greatestAvg
+            if (!takeCount || takeCount === 1) {
+                const term = (1 - 1.0 / (2 * sides))
+                const greatestAvg = sides * (1 - (1.0 / (count + 1)) * Math.pow(term, count + 1))
+                return sides + 1 - greatestAvg
+            }
+            
+            let sum = 0
+            const allCombinations = Math.pow(sides, count)
+            
+            for (let i = 0; i < allCombinations; i++) {
+                const rolls: number[] = []
+                let temp = i
+                
+                for (let j = 0; j < count; j++) {
+                    rolls.push((temp % sides) + 1)
+                    temp = Math.floor(temp / sides)
+                }
+                
+                rolls.sort((a, b) => a - b)
+                const value = rolls.slice(0, takeCount).reduce((a, b) => a + b, 0)
+                sum += value
+            }
+            
+            return sum / allCombinations
         }
         default:
             throw new Error(`Unknown operator: ${operator}`)
     }
 }
 
-export function createDiceGroup(count: number, sides: number, operator: DiceOperator = 'sum'): DiceGroupResult {
+// Helper function to calculate binomial coefficient (n choose k)
+function binomialCoefficient(n: number, k: number): number {
+    if (k > n) return 0
+    if (k === 0 || k === n) return 1
+    if (k > n - k) k = n - k // optimization: C(n,k) = C(n,n-k)
+    
+    let result = 1
+    for (let i = 0; i < k; i++) {
+        result *= (n - i)
+        result /= (i + 1)
+    }
+    return result
+}
+
+export function createDiceGroup(count: number, sides: number, operator: DiceOperator = 'sum', takeCount?: number): DiceGroupResult {
     const dice = Array.from({ length: count }, () => rollDie(sides))
     return {
         dice,
@@ -71,19 +131,28 @@ export function createDiceGroup(count: number, sides: number, operator: DiceOper
         count,
         operator,
         value: computeGroupValue(dice, operator),
-        average: calculateExpectedAverage(count, sides, operator)
+        average: calculateExpectedAverage(count, sides, operator, takeCount)
     }
 }
 
-function parseOneGroup(groupStr: string): DiceGroupResult {
+function parseOneGroup(groupStr: string, skipAverages?: boolean): DiceGroupResult {
     let operator: DiceOperator = 'sum'
     let diceFormula = groupStr.trim()
+    let takeCount: number | undefined
 
-    if (diceFormula.startsWith('>')) {
+    // Check for take count before operator (e.g., "3>4d6")
+    const takeMatch = diceFormula.match(/^(\d+)([<>])/)
+    if (takeMatch) {
+        takeCount = parseInt(takeMatch[1])
+        operator = takeMatch[2] === '>' ? 'greatest' : 'least'
+        diceFormula = diceFormula.slice(takeMatch[0].length)
+    } else if (diceFormula.startsWith('>')) {
         operator = 'greatest'
+        takeCount = 1 // Default to taking 1 when using >
         diceFormula = diceFormula.slice(1)
     } else if (diceFormula.startsWith('<')) {
         operator = 'least'
+        takeCount = 1 // Default to taking 1 when using <
         diceFormula = diceFormula.slice(1)
     }
 
@@ -97,10 +166,31 @@ function parseOneGroup(groupStr: string): DiceGroupResult {
     const count = parseInt(match[1])
     const sides = parseInt(match[2])
 
-    return createDiceGroup(count, sides, operator)
+    // If takeCount is specified, it can't be larger than the dice count
+    if (takeCount && takeCount > count) {
+        throw new Error(`Cannot take ${takeCount} dice from ${count} dice`)
+    }
+
+    const group = createDiceGroup(count, sides, operator, takeCount)
+    
+    // If we have a takeCount, we need to modify the value calculation
+    if (takeCount) {
+        const sortedValues = group.dice.map(d => d.value).sort((a, b) => operator === 'greatest' ? b - a : a - b)
+        group.value = sortedValues.slice(0, takeCount).reduce((sum, val) => sum + val, 0)
+    }
+
+    if (skipAverages) {
+        group.average = 0 // Skip averaging
+    }
+
+    return group
 }
 
-export function parseDiceFormula(formula: string): RollResult {
+export interface ParseDiceOptions {
+    skipAverages?: boolean;
+}
+
+export function parseDiceFormula(formula: string, options: ParseDiceOptions = {}): RollResult {
     const displayFormula = formula.replace(/\s+/g, '')
     const parts = displayFormula.split(/(?=[-+])/)
     
@@ -111,8 +201,8 @@ export function parseDiceFormula(formula: string): RollResult {
         const isSubtraction = part.startsWith('-')
         const cleanPart = part.replace(/^[+-]/, '')
 
-        if (/^[<>]?\d+d\d+$/i.test(cleanPart)) {
-            const group = parseOneGroup(cleanPart)
+        if (/^(\d+[<>])?[<>]?\d+d\d+$/i.test(cleanPart)) {
+            const group = parseOneGroup(cleanPart, options.skipAverages)
             if (isSubtraction) {
                 group.value = -group.value
             }
@@ -155,64 +245,119 @@ export interface HistogramResult {
   };
 }
 
-export function calculateHistogram(formula: string, iterations = 100000): HistogramResult {
-  const frequencies = new Map<number, number>();
-  const allValues: number[] = [];
-  let min = Number.MAX_SAFE_INTEGER;
-  let max = Number.MIN_SAFE_INTEGER;
-  let sum = 0;
+function calculateHistogramRoll(formula: string): number {
+    const displayFormula = formula.replace(/\s+/g, '')
+    const parts = displayFormula.split(/(?=[-+])/)
+    let total = 0
 
-  // Collect all values and calculate initial statistics
-  for (let i = 0; i < iterations; i++) {
-    const result = parseDiceFormula(formula);
-    const total = result.total;
-    allValues.push(total);
-    sum += total;
+    for (const part of parts) {
+        const isSubtraction = part.startsWith('-')
+        const cleanPart = part.replace(/^[+-]/, '')
 
-    // Update frequencies
-    frequencies.set(total, (frequencies.get(total) || 0) + 1);
+        if (/^(\d+[<>])?[<>]?\d+d\d+$/i.test(cleanPart)) {
+            // Parse dice group without creating objects
+            let operator: DiceOperator = 'sum'
+            let diceFormula = cleanPart
+            let takeCount: number | undefined
 
-    // Update min/max
-    min = Math.min(min, total);
-    max = Math.max(max, total);
-  }
+            const takeMatch = diceFormula.match(/^(\d+)([<>])/)
+            if (takeMatch) {
+                takeCount = parseInt(takeMatch[1])
+                operator = takeMatch[2] === '>' ? 'greatest' : 'least'
+                diceFormula = diceFormula.slice(takeMatch[0].length)
+            } else if (diceFormula.startsWith('>')) {
+                operator = 'greatest'
+                takeCount = 1
+                diceFormula = diceFormula.slice(1)
+            } else if (diceFormula.startsWith('<')) {
+                operator = 'least'
+                takeCount = 1
+                diceFormula = diceFormula.slice(1)
+            }
 
-  // Calculate mean
-  const mean = sum / iterations;
+            const match = diceFormula.match(/(\d+)d(\d+)/i)
+            if (!match) throw new Error(`Invalid dice group: ${cleanPart}`)
 
-  // Calculate standard deviation
-  const squaredDiffs = allValues.map(value => Math.pow(value - mean, 2));
-  const variance = squaredDiffs.reduce((acc, val) => acc + val, 0) / iterations;
-  const standardDeviation = Math.sqrt(variance);
+            const count = parseInt(match[1])
+            const sides = parseInt(match[2])
+            
+            // Roll dice and calculate value directly
+            const rolls = Array.from({ length: count }, () => Math.floor(Math.random() * sides) + 1)
+            let value: number
+            
+            if (takeCount) {
+                rolls.sort((a, b) => operator === 'greatest' ? b - a : a - b)
+                value = rolls.slice(0, takeCount).reduce((sum, val) => sum + val, 0)
+            } else {
+                value = operator === 'sum' 
+                    ? rolls.reduce((sum, val) => sum + val, 0)
+                    : operator === 'greatest'
+                        ? Math.max(...rolls)
+                        : Math.min(...rolls)
+            }
 
-  // Sort values for percentile calculations
-  allValues.sort((a, b) => a - b);
-
-  // Calculate percentiles
-  const getPercentile = (p: number) => {
-    const index = Math.ceil((p / 100) * iterations) - 1;
-    return allValues[index];
-  };
-
-  // Sort the frequencies map by keys
-  const sortedFrequencies = new Map(
-    [...frequencies.entries()].sort((a, b) => a[0] - b[0])
-  );
-
-  return {
-    min,
-    max,
-    frequencies: sortedFrequencies,
-    totalRolls: iterations,
-    mean,
-    standardDeviation,
-    percentiles: {
-      p25: getPercentile(25),
-      p50: getPercentile(50),
-      p75: getPercentile(75),
-      p90: getPercentile(90),
-      p95: getPercentile(95),
-      p99: getPercentile(99)
+            total += isSubtraction ? -value : value
+        } else if (/^\d+$/.test(cleanPart)) {
+            const num = parseInt(cleanPart)
+            total += isSubtraction ? -num : num
+        }
     }
-  };
+
+    return total
+}
+
+export function calculateHistogram(formula: string, iterations = 100000): HistogramResult {
+    const frequencies = new Map<number, number>();
+    const allValues: number[] = [];
+    let min = Number.MAX_SAFE_INTEGER;
+    let max = Number.MIN_SAFE_INTEGER;
+    let sum = 0;
+
+    for (let i = 0; i < iterations; i++) {
+        const total = calculateHistogramRoll(formula);
+        allValues.push(total);
+        sum += total;
+        frequencies.set(total, (frequencies.get(total) || 0) + 1);
+        min = Math.min(min, total);
+        max = Math.max(max, total);
+    }
+
+    // Calculate mean
+    const mean = sum / iterations;
+
+    // Calculate standard deviation
+    const squaredDiffs = allValues.map(value => Math.pow(value - mean, 2));
+    const variance = squaredDiffs.reduce((acc, val) => acc + val, 0) / iterations;
+    const standardDeviation = Math.sqrt(variance);
+
+    // Sort values for percentile calculations
+    allValues.sort((a, b) => a - b);
+
+    // Calculate percentiles
+    const getPercentile = (p: number) => {
+        const index = Math.ceil((p / 100) * iterations) - 1;
+        return allValues[index];
+    };
+
+    // Sort the frequencies map by keys
+    const sortedFrequencies = new Map(
+        [...frequencies.entries()].sort((a, b) => a[0] - b[0])
+    );
+
+    return {
+        min,
+        max,
+        frequencies: sortedFrequencies,
+        totalRolls: iterations,
+        mean,
+        standardDeviation,
+        percentiles: {
+            p25: getPercentile(25),
+            p50: getPercentile(50),
+            p75: getPercentile(75),
+            p90: getPercentile(90),
+            p95: getPercentile(95),
+            p99: getPercentile(99)
+        }
+    };
 } 

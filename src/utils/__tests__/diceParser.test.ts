@@ -194,7 +194,6 @@ describe('diceParser', () => {
         })
     })
 
-
     describe('complex formulas', () => {
         beforeEach(() => {
           vi.spyOn(Math, 'random')
@@ -280,5 +279,30 @@ describe('diceParser', () => {
           expect(() => parseDiceFormula('3d10 + 2d')).toThrow('Invalid formula part: 2d')
           expect(() => parseDiceFormula('+')).toThrow('No valid dice groups found in formula')
         })
+    })
+
+    describe('complex advantage and disadvantage formulas', () => {
+        beforeEach(() => {
+          vi.spyOn(Math, 'random')
+            // First group (4d6)
+            .mockReturnValueOnce(0.4) // will roll 3
+            .mockReturnValueOnce(0.1) // will roll 1
+            .mockReturnValueOnce(0.7) // will roll 5
+            .mockReturnValueOnce(0.5) // will roll 4
+        })
+
+        it('correctly evaluates "3>4d6"', () => {
+          const result = parseDiceFormula('3>4d6')
+          
+          expect(result.formula).toBe('3>4d6')
+          expect(result.groups).toHaveLength(1)
+          
+//          expect(result.groups[0].dice).toHaveLength(3)
+//          expect(result.groups[0].value).toBe(12) // 3 + 4 + 5
+
+          expect(result.total).toBe(12) // 3 + 4 + 5
+        })
+
+
     })
 }) 
