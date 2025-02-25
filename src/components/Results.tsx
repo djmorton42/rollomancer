@@ -26,8 +26,8 @@ function getDiceStyles(operator: DiceOperator) {
 function DiceGroup({ group, rollId }: { group: DiceGroupResult; rollId: number }) {
   const operatorSymbol = {
     sum: '∑',
-    greatest: 'max',
-    least: 'min'
+    greatest: group.takeCount && group.takeCount > 1 ? `max ${group.takeCount}` : 'max',
+    least: group.takeCount && group.takeCount > 1 ? `min ${group.takeCount}` : 'min'
   }[group.operator]
 
   const operatorClass = {

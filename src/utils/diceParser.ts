@@ -15,6 +15,7 @@ export interface DiceGroupResult {
     operator: DiceOperator
     value: number // The computed value after applying the operator
     average: number // The expected average value for this dice group
+    takeCount?: number
 }
 
 // The complete result of evaluating a formula
@@ -130,6 +131,7 @@ export function createDiceGroup(count: number, sides: number, operator: DiceOper
         sides,
         count,
         operator,
+        takeCount,
         value: computeGroupValue(dice, operator),
         average: calculateExpectedAverage(count, sides, operator, takeCount)
     }

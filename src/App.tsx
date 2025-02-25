@@ -29,6 +29,7 @@ function App() {
   const [statsResult, setStatsResult] = useState<HistogramResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [pendingFormula, setPendingFormula] = useState<string>('')
+  const [statsFormula, setStatsFormula] = useState<string>('')
 
   useEffect(() => {
     saveToStorage('HISTORY', rollHistory)
@@ -126,6 +127,7 @@ function App() {
       setRollResult(null)
       setError(null)
       setFormula(pendingFormula)
+      setStatsFormula(pendingFormula)
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Invalid dice formula')
     }
@@ -163,7 +165,7 @@ function App() {
               />
               <AnimatePresence mode="wait">
                 {showStats && statsResult ? (
-                  <Stats stats={statsResult} formula={pendingFormula} />
+                  <Stats stats={statsResult} formula={statsFormula} />
                 ) : (
                   <Results 
                     result={rollResult} 
