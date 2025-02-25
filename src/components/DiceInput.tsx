@@ -29,7 +29,7 @@ export function DiceInput({ formula, setFormula, onRoll, onStats, onClear }: Dic
             type="text"
             value={formula}
             onChange={(e) => setFormula(e.target.value)}
-            placeholder="Enter dice formula (e.g., 3d20 + 2d4 + 5)"
+            placeholder="Enter formula (e.g., 3d20 + 2d4 + 5)"
             className="w-full px-4 py-2 rounded bg-slate-700 border border-slate-600 focus:border-blue-500 focus:outline-none"
           />
           <div
