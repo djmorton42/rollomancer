@@ -110,20 +110,6 @@ function calculateExpectedAverage(count: number, sides: number, operator: DiceOp
     }
 }
 
-// Helper function to calculate binomial coefficient (n choose k)
-function binomialCoefficient(n: number, k: number): number {
-    if (k > n) return 0
-    if (k === 0 || k === n) return 1
-    if (k > n - k) k = n - k // optimization: C(n,k) = C(n,n-k)
-    
-    let result = 1
-    for (let i = 0; i < k; i++) {
-        result *= (n - i)
-        result /= (i + 1)
-    }
-    return result
-}
-
 export function createDiceGroup(count: number, sides: number, operator: DiceOperator = 'sum', takeCount?: number): DiceGroupResult {
     const dice = Array.from({ length: count }, () => rollDie(sides))
     return {
