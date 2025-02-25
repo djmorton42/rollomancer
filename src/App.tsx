@@ -60,8 +60,11 @@ function App() {
 
   const handleView = (roll: RollResult) => {
     setFormula(roll.formula)
+    setPendingFormula(roll.formula)
     setRollResult(roll)
     setRollCount(prev => prev + 1) // Trigger animation without adding to history
+    setStatsResult(null)
+    setShowStats(false)
   }
 
   const handleClear = () => {
@@ -73,6 +76,7 @@ function App() {
 
   const handleReroll = (formula: string) => {
     setFormula(formula)
+    setPendingFormula(formula)
     handleRoll(formula)
   }
 
@@ -101,6 +105,7 @@ function App() {
   const handleRollFavourite = (formula: string, label: string) => {
     try {
       setFormula(formula)
+      setPendingFormula(formula)
       const result = parseDiceFormula(formula)
       setRollResult({ ...result, favouriteLabel: label })
       setRollCount(prev => prev + 1)

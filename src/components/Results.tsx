@@ -36,7 +36,29 @@ function DiceGroup({ group, rollId }: { group: DiceGroupResult; rollId: number }
     least: 'text-amber-400'
   }[group.operator]
 
-  const diceStyle = getDiceStyles(group.operator)
+  // Create array of dice with their indices to preserve original order
+  const diceWithIndices = group.dice.map((die, index) => ({ die, originalIndex: index }))
+  
+  // Sort if we're taking highest/lowest
+  if (group.takeCount) {
+    diceWithIndices.sort((a, b) => 
+      group.operator === 'greatest' 
+        ? b.die.value - a.die.value 
+        : a.die.value - b.die.value
+    )
+  }
+
+  // Track which dice are selected
+  const selectedIndices = new Set(
+    group.takeCount 
+      ? diceWithIndices
+          .slice(0, group.takeCount)
+          .map(d => d.originalIndex)
+      : diceWithIndices.map(d => d.originalIndex)
+  )
+
+  // Get base style for dice
+  const baseStyle = getDiceStyles(group.operator)
 
   return (
     <motion.div
@@ -65,7 +87,13 @@ function DiceGroup({ group, rollId }: { group: DiceGroupResult; rollId: number }
                 type: "spring",
                 stiffness: 200
               }}
-              className={diceStyle}
+              className={`${baseStyle} ${
+                group.takeCount 
+                  ? selectedIndices.has(diceIndex)
+                    ? 'ring-2 ring-offset-1 ring-offset-slate-700'
+                    : 'opacity-40'
+                  : ''
+              }`}
             >
               {die.value}
             </motion.span>

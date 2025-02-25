@@ -79,6 +79,8 @@ export function DiceInput({ formula, setFormula, onRoll, onStats, onClear }: Dic
               <p><code className="text-emerald-400">1d10 + 1d4</code> → roll a 10-sided dice and a 4-sided dice and add the results</p>
               <p><code className="text-emerald-400">&gt;2d20</code> → roll two 20-sided dice and take the highest roll</p>
               <p><code className="text-emerald-400">&lt;3d10</code> → roll three 10-sided dice and take the lowest roll</p>
+              <p><code className="text-emerald-400">3&gt;4d6</code> → roll four 6-sided dice and take the highest three rolls</p>
+              <p><code className="text-emerald-400">3&lt;4d6</code> → roll four 6-sided dice and take the lowest three rolls</p>
             </div>
           </motion.div>
         )}
