@@ -15,7 +15,7 @@ export interface DiceGroupResult {
     operator: DiceOperator
     value: number // The computed value after applying the operator
     average: number // The expected average value for this dice group
-    takeCount?: number
+    takeCount?: number // 
 }
 
 // The complete result of evaluating a formula
@@ -46,6 +46,30 @@ function computeGroupValue(dice: DieResult[], operator: DiceOperator): number {
     }
 }
 
+function calculateAverageForTakeN(count: number, sides: number, operator: DiceOperator, takeCount: number): number {
+    let sum = 0
+    const allCombinations = Math.pow(sides, count) // Total possible combinations
+    
+    // For each possible combination of dice
+    for (let i = 0; i < allCombinations; i++) {
+        const rolls: number[] = []
+        let temp = i
+        
+        // Convert number to dice rolls
+        for (let j = 0; j < count; j++) {
+            rolls.push((temp % sides) + 1)
+            temp = Math.floor(temp / sides)
+        }
+        
+        // Sort rolls and take N based on operator
+        rolls.sort((a, b) => operator === 'greatest' ? b - a : a - b)
+        const value = rolls.slice(0, takeCount).reduce((a, b) => a + b, 0)
+        sum += value
+    }
+    
+    return sum / allCombinations
+}
+
 function calculateExpectedAverage(count: number, sides: number, operator: DiceOperator, takeCount?: number): number {
     switch (operator) {
         case 'sum':
@@ -55,29 +79,7 @@ function calculateExpectedAverage(count: number, sides: number, operator: DiceOp
                 const term = (1 - 1.0 / (2 * sides))
                 return sides * (1 - (1.0 / (count + 1)) * Math.pow(term, count + 1))
             }
-            
-            // For keeping N highest dice, we need to sum them
-            let sum = 0
-            const allCombinations = Math.pow(sides, count) // Total possible combinations
-            
-            // For each possible combination of dice
-            for (let i = 0; i < allCombinations; i++) {
-                const rolls: number[] = []
-                let temp = i
-                
-                // Convert number to dice rolls
-                for (let j = 0; j < count; j++) {
-                    rolls.push((temp % sides) + 1)
-                    temp = Math.floor(temp / sides)
-                }
-                
-                // Sort rolls in descending order and take highest N
-                rolls.sort((a, b) => b - a)
-                const value = rolls.slice(0, takeCount).reduce((a, b) => a + b, 0)
-                sum += value
-            }
-            
-            return sum / allCombinations
+            return calculateAverageForTakeN(count, sides, operator, takeCount)
         }
         case 'least': {
             if (!takeCount || takeCount === 1) {
@@ -85,25 +87,7 @@ function calculateExpectedAverage(count: number, sides: number, operator: DiceOp
                 const greatestAvg = sides * (1 - (1.0 / (count + 1)) * Math.pow(term, count + 1))
                 return sides + 1 - greatestAvg
             }
-            
-            let sum = 0
-            const allCombinations = Math.pow(sides, count)
-            
-            for (let i = 0; i < allCombinations; i++) {
-                const rolls: number[] = []
-                let temp = i
-                
-                for (let j = 0; j < count; j++) {
-                    rolls.push((temp % sides) + 1)
-                    temp = Math.floor(temp / sides)
-                }
-                
-                rolls.sort((a, b) => a - b)
-                const value = rolls.slice(0, takeCount).reduce((a, b) => a + b, 0)
-                sum += value
-            }
-            
-            return sum / allCombinations
+            return calculateAverageForTakeN(count, sides, operator, takeCount)
         }
         default:
             throw new Error(`Unknown operator: ${operator}`)

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { parseDiceFormula, type DiceOperator, createDiceGroup } from '../diceParser'
+import { mockDiceRolls, dieRollToPercentage } from './testUtils'
 
 describe('diceParser', () => {
     afterEach(() => {
@@ -33,19 +34,21 @@ describe('diceParser', () => {
 
     describe('basic formula parsing', () => {
         beforeEach(() => {
-            // Mock Math.random to return predictable values
-            vi.spyOn(Math, 'random')
-                .mockReturnValueOnce(0.3) // will roll 4 (on d10)
-                .mockReturnValueOnce(0.7) // will roll 8 (on d10)
-                .mockReturnValueOnce(0.1) // will roll 2 (on d10)
+            mockDiceRolls(
+                [
+                    dieRollToPercentage(4, 10),
+                    dieRollToPercentage(8, 10),
+                    dieRollToPercentage(2, 10),
 
-                .mockReturnValueOnce(0.3) // will roll 4 (on d10)
-                .mockReturnValueOnce(0.7) // will roll 8 (on d10)
-                .mockReturnValueOnce(0.1) // will roll 2 (on d10)
+                    dieRollToPercentage(4, 10),
+                    dieRollToPercentage(8, 10),
+                    dieRollToPercentage(2, 10),
 
-                .mockReturnValueOnce(0.3) // will roll 4 (on d10)
-                .mockReturnValueOnce(0.7) // will roll 8 (on d10)
-                .mockReturnValueOnce(0.1) // will roll 2 (on d10)
+                    dieRollToPercentage(4, 10),
+                    dieRollToPercentage(8, 10),
+                    dieRollToPercentage(2, 10),
+                ]
+            )
         })
 
         it('computes correct values for different operators', () => {
@@ -120,14 +123,16 @@ describe('diceParser', () => {
 
     describe('multiple dice groups', () => {
         beforeEach(() => {
-            // Mock Math.random to return predictable values
-            vi.spyOn(Math, 'random')
-                .mockReturnValueOnce(0.3) // will roll 4 (on d10)
-                .mockReturnValueOnce(0.7) // will roll 8 (on d10)
-                .mockReturnValueOnce(0.1) // will roll 2 (on d10)
+            mockDiceRolls(
+                [
+                    dieRollToPercentage(4, 10),
+                    dieRollToPercentage(8, 10),
+                    dieRollToPercentage(2, 10),
 
-                .mockReturnValueOnce(0.25) // will roll 3 (on d8)
-                .mockReturnValueOnce(0.75) // will roll 7 (on d8)
+                    dieRollToPercentage(3, 8),
+                    dieRollToPercentage(7, 8),
+                ]
+            )
         })
 
         it('correctly handles two groups of dice', () => {
@@ -147,18 +152,17 @@ describe('diceParser', () => {
 
     describe('formulas subtracting one gropu from another', () => {
         beforeEach(() => {
-          vi.spyOn(Math, 'random')
-            // First group (6d6)
-
-            .mockReturnValueOnce(0.066) // 1
-            .mockReturnValueOnce(0.362) // 3
-            .mockReturnValueOnce(0.786) // 5
-            .mockReturnValueOnce(0.225) // 2
-            .mockReturnValueOnce(0.557) // 4
-            .mockReturnValueOnce(0.287) // 2
-         
-            // Second group (1d4)
-            .mockReturnValueOnce(0.449) // 2
+            mockDiceRolls(
+                [
+                    dieRollToPercentage(1, 6),
+                    dieRollToPercentage(3, 6),
+                    dieRollToPercentage(5, 6),
+                    dieRollToPercentage(2, 6),
+                    dieRollToPercentage(4, 6),
+                    dieRollToPercentage(2, 6),
+                    dieRollToPercentage(2, 4),
+                ]
+            )
         })
 
         it('correctly evaluates formulas with subtracting one group from another like  "6d6 - 1d4"', () => {
@@ -196,14 +200,15 @@ describe('diceParser', () => {
 
     describe('complex formulas', () => {
         beforeEach(() => {
-          vi.spyOn(Math, 'random')
-            // First group (3d10)
-            .mockReturnValueOnce(0.3) // will roll 4
-            .mockReturnValueOnce(0.7) // will roll 8
-            .mockReturnValueOnce(0.1) // will roll 2
-            // Second group (2d8)
-            .mockReturnValueOnce(0.5) // will roll 5
-            .mockReturnValueOnce(0.8) // will roll 7
+            mockDiceRolls(
+                [
+                    dieRollToPercentage(4, 10),
+                    dieRollToPercentage(8, 10),
+                    dieRollToPercentage(2, 10),
+                    dieRollToPercentage(5, 8),
+                    dieRollToPercentage(7, 8),
+                ]
+            )
         })
 
         it('correctly evaluates "3d10 + 2d8"', () => {
@@ -283,12 +288,18 @@ describe('diceParser', () => {
 
     describe('complex advantage and disadvantage formulas', () => {
         beforeEach(() => {
-          vi.spyOn(Math, 'random')
-            // First group (4d6)
-            .mockReturnValueOnce(0.4) // will roll 3
-            .mockReturnValueOnce(0.1) // will roll 1
-            .mockReturnValueOnce(0.7) // will roll 5
-            .mockReturnValueOnce(0.5) // will roll 4
+            mockDiceRolls(
+                [
+                    dieRollToPercentage(3, 6),
+                    dieRollToPercentage(1, 6),
+                    dieRollToPercentage(5, 6),
+                    dieRollToPercentage(4, 6),
+                    dieRollToPercentage(3, 6),
+                    dieRollToPercentage(1, 6),
+                    dieRollToPercentage(5, 6),
+                    dieRollToPercentage(4, 6),
+                ]
+            )
         })
 
         it('correctly evaluates "3>4d6"', () => {
@@ -297,12 +308,25 @@ describe('diceParser', () => {
           expect(result.formula).toBe('3>4d6')
           expect(result.groups).toHaveLength(1)
           
-//          expect(result.groups[0].dice).toHaveLength(3)
-//          expect(result.groups[0].value).toBe(12) // 3 + 4 + 5
-
           expect(result.total).toBe(12) // 3 + 4 + 5
         })
 
-
+        it('correctly evaluates "3<4d6"', () => {
+            const result = parseDiceFormula('3<4d6')
+            
+            expect(result.formula).toBe('3<4d6')
+            expect(result.groups).toHaveLength(1)
+            
+            expect(result.total).toBe(8) // 3 + 1 + 4
+        })
+  
+        it('correctly evaluates "3<4d6 + 1d6"', () => {
+            const result = parseDiceFormula('3<4d6 + 1d6')
+            
+            expect(result.formula).toBe('3<4d6+1d6')
+            expect(result.groups).toHaveLength(2)
+            
+            expect(result.total).toBe(11) // 3 + 1 + 4 + 3
+        })
     })
 }) 
