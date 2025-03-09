@@ -58,19 +58,21 @@ function DiceGroup({ group, rollId }: { group: DiceGroupResult; rollId: number }
   // Track which dice are selected
   const selectedIndices = new Set(
     group.threshold
-      ? group.dice
-          .map((die, index) => ({ die, index }))
-          .filter(({ die }) => 
-            group.threshold!.type === '>=' 
-              ? die.value >= group.threshold!.value 
-              : die.value > group.threshold!.value
-          )
-          .map(({ index }) => index)
-      : group.takeCount 
-        ? diceWithIndices
-            .slice(0, group.takeCount)
-            .map(d => d.originalIndex)
-        : diceWithIndices.map(d => d.originalIndex)
+        ? group.dice
+            .map((die, index) => ({ die, index }))
+            .filter(({ die }) => 
+                group.threshold!.type === '=' 
+                    ? die.value === group.threshold!.value
+                    : group.threshold!.type === '>=' 
+                        ? die.value >= group.threshold!.value 
+                        : die.value > group.threshold!.value
+            )
+            .map(({ index }) => index)
+        : group.takeCount 
+            ? diceWithIndices
+                .slice(0, group.takeCount)
+                .map(d => d.originalIndex)
+            : diceWithIndices.map(d => d.originalIndex)
   )
 
   // Get base style for dice

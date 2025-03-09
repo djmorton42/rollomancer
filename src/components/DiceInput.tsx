@@ -81,6 +81,9 @@ export function DiceInput({ formula, setFormula, onRoll, onStats, onClear }: Dic
               <p><code className="text-emerald-400">&lt;3d10</code> → roll three 10-sided dice and take the lowest roll</p>
               <p><code className="text-emerald-400">3&gt;4d6</code> → roll four 6-sided dice and take the highest three rolls</p>
               <p><code className="text-emerald-400">3&lt;4d6</code> → roll four 6-sided dice and take the lowest three rolls</p>
+              <p><code className="text-emerald-400">5d10=10</code> → roll five 10-sided dice and count the number of 10s rolled</p>
+              <p><code className="text-emerald-400">4d8&gt;5</code> → roll four 8-sided dice and count the number of 6s or higher rolled</p>
+              <p><code className="text-emerald-400">6d6&gt;=3</code> → roll six 6-sided dice and count the number of 3s or higher rolled</p>
             </div>
           </motion.div>
         )}
