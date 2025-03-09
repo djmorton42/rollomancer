@@ -76,7 +76,26 @@ function calculateAverageForTakeN(count: number, sides: number, operator: DiceOp
     return sum / allCombinations
 }
 
-function calculateExpectedAverage(count: number, sides: number, operator: DiceOperator, takeCount?: number): number {
+function calculateThresholdAverage(count: number, sides: number, threshold: number, isGreaterEqual: boolean): number {
+    // Calculate probability of a single die succeeding
+    const successProbability = isGreaterEqual
+        ? (sides - threshold + 1) / sides
+        : (sides - threshold) / sides;
+    
+    // For a binomial distribution, expected value is n*p
+    return count * successProbability;
+}
+
+function calculateExpectedAverage(count: number, sides: number, operator: DiceOperator, takeCount?: number, threshold?: ThresholdOperator): number {
+    if (threshold) {
+        return calculateThresholdAverage(
+            count,
+            sides,
+            threshold.value,
+            threshold.type === '>='
+        );
+    }
+
     switch (operator) {
         case 'sum':
             return (sides + 1) / 2 * count
@@ -161,6 +180,7 @@ function parseOneGroup(groupStr: string, skipAverages?: boolean): DiceGroupResul
     }
 
     const group = createDiceGroup(count, sides, operator, takeCount)
+    group.average = calculateExpectedAverage(count, sides, operator, takeCount, threshold)
     
     // If we have a threshold, count dice meeting the condition
     if (threshold) {
