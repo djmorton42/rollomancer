@@ -384,4 +384,36 @@ describe('diceParser', () => {
             expect(result.total).toBe(11) // 3 + 1 + 4 + 3
         })
     })
+
+    describe('threshold rolls', () => {
+        it('calculates correct average for threshold rolls', () => {
+            // Mock not needed for average calculations
+            const cases = [
+                { formula: '4d6>=4', expectedAverage: 2 },    // P(success) = 0.5 for each die
+                { formula: '3d10>5', expectedAverage: 1.5 },  // P(success) = 0.5 for each die
+                { formula: '2d20>=15', expectedAverage: 0.6 }, // P(success) = 0.3 for each die
+            ]
+
+            cases.forEach(({ formula, expectedAverage }) => {
+                const result = parseDiceFormula(formula)
+                expect(result.groups[0].average).toBeCloseTo(expectedAverage, 1)
+            })
+        })
+
+        it('rejects invalid threshold values', () => {
+            expect(() => parseDiceFormula('3d6>=0')).toThrow('cannot roll lower than 1')
+            expect(() => parseDiceFormula('3d6>=7')).toThrow('cannot roll higher than 6')
+            expect(() => parseDiceFormula('3d10>11')).toThrow('cannot roll higher than 10')
+            expect(() => parseDiceFormula('2d20>=21')).toThrow('cannot roll higher than 20')
+        })
+
+        it('handles complex threshold formulas', () => {
+            const result = parseDiceFormula('2d6>=4 + 3d8>=5 - 1d4>=4')
+            expect(result.groups.length).toBe(3)
+            // P(success) = 0.5 for 2d6>=4, 0.5 for 3d8>=5, 0.25 for 1d4>=4
+            expect(result.groups[0].average).toBeCloseTo(1.0, 1)  // 2 * 0.5
+            expect(result.groups[1].average).toBeCloseTo(1.5, 1)  // 3 * 0.5
+            expect(result.groups[2].average).toBeCloseTo(0.25, 2) // 1 * 0.25
+        })
+    })
 }) 

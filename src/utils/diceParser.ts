@@ -142,9 +142,20 @@ function parseOneGroup(groupStr: string, skipAverages?: boolean): DiceGroupResul
     const thresholdMatch = diceFormula.match(/(\d+)d(\d+)([>]=?|<)(\d+)/)
     if (thresholdMatch) {
         const [_, count, sides, op, value] = thresholdMatch
+        const thresholdValue = parseInt(value)
+        const dieSize = parseInt(sides)
+
+        // Validate threshold value is within possible die results
+        if (thresholdValue < 1) {
+            throw new Error(`Threshold value ${thresholdValue} is invalid - dice cannot roll lower than 1`)
+        }
+        if (thresholdValue > dieSize) {
+            throw new Error(`Threshold value ${thresholdValue} is invalid - d${dieSize} cannot roll higher than ${dieSize}`)
+        }
+
         threshold = {
             type: op === '>=' ? '>=' : '>',
-            value: parseInt(value)
+            value: thresholdValue
         }
         diceFormula = `${count}d${sides}`
     } else {
