@@ -251,87 +251,81 @@ export interface HistogramResult {
 }
 
 function calculateHistogramRoll(formula: string): number {
-    // Check if this is a threshold roll
-    const thresholdMatch = formula.match(/(\d+)d(\d+)([>]=?|>)(\d+)/);
-    if (thresholdMatch) {
-        const [_, count, sides, op, value] = thresholdMatch;
-        const threshold = parseInt(value);
-        const isGreaterEqual = op === '>=';
-        
-        // Roll the dice and count successes
-        let successes = 0;
-        for (let i = 0; i < parseInt(count); i++) {
-            const roll = Math.floor(Math.random() * parseInt(sides)) + 1;
-            if (isGreaterEqual ? roll >= threshold : roll > threshold) {
-                successes++;
-            }
-        }
-        return successes;
-    }
-
-    // Original non-threshold roll logic
     const displayFormula = formula.replace(/\s+/g, '');
     const parts = displayFormula.split(/(?=[-+])/);
     let total = 0;
 
     for (const part of parts) {
-        const isSubtraction = part.startsWith('-')
-        const cleanPart = part.replace(/^[+-]/, '')
+        const isSubtraction = part.startsWith('-');
+        const cleanPart = part.replace(/^[+-]/, '');
 
-        if (/^(\d+[<>])?[<>]?\d+d\d+$/i.test(cleanPart)) {
-            // Parse dice group without creating objects
-            let operator: DiceOperator = 'sum'
-            let diceFormula = cleanPart
-            let takeCount: number | undefined
-
-            const takeMatch = diceFormula.match(/^(\d+)([<>])/)
+        // Check if this part is a threshold roll
+        const thresholdMatch = cleanPart.match(/(\d+)d(\d+)([>]=?|>)(\d+)/);
+        if (thresholdMatch) {
+            const [_, count, sides, op, value] = thresholdMatch;
+            const threshold = parseInt(value);
+            const isGreaterEqual = op === '>=';
+            
+            let successes = 0;
+            for (let i = 0; i < parseInt(count); i++) {
+                const roll = Math.floor(Math.random() * parseInt(sides)) + 1;
+                if (isGreaterEqual ? roll >= threshold : roll > threshold) {
+                    successes++;
+                }
+            }
+            total += isSubtraction ? -successes : successes;
+        } else if (/^(\d+[<>])?[<>]?\d+d\d+$/i.test(cleanPart)) {
+            // Fast path for take highest/lowest rolls
+            const takeMatch = cleanPart.match(/^(\d+)([<>])/);
+            let takeCount: number | undefined;
+            let operator: 'greatest' | 'least' = 'greatest';
+            let diceFormula = cleanPart;
+            
             if (takeMatch) {
-                takeCount = parseInt(takeMatch[1])
-                operator = takeMatch[2] === '>' ? 'greatest' : 'least'
-                diceFormula = diceFormula.slice(takeMatch[0].length)
+                takeCount = parseInt(takeMatch[1]);
+                operator = takeMatch[2] === '>' ? 'greatest' : 'least';
+                diceFormula = diceFormula.slice(takeMatch[0].length);
             } else if (diceFormula.startsWith('>')) {
-                operator = 'greatest'
-                takeCount = 1
-                diceFormula = diceFormula.slice(1)
+                takeCount = 1;
+                operator = 'greatest';
+                diceFormula = diceFormula.slice(1);
             } else if (diceFormula.startsWith('<')) {
-                operator = 'least'
-                takeCount = 1
-                diceFormula = diceFormula.slice(1)
+                takeCount = 1;
+                operator = 'least';
+                diceFormula = diceFormula.slice(1);
             }
 
-            const match = diceFormula.match(/(\d+)d(\d+)/i)
-            if (!match) throw new Error(`Invalid dice group: ${cleanPart}`)
-
-            const count = parseInt(match[1])
-            const sides = parseInt(match[2])
+            const match = diceFormula.match(/(\d+)d(\d+)/);
+            if (!match) throw new Error(`Invalid dice group: ${cleanPart}`);
             
-            // Roll dice and calculate value directly
-            const rolls = Array.from({ length: count }, () => Math.floor(Math.random() * sides) + 1)
-            let value: number
+            const count = parseInt(match[1]);
+            const sides = parseInt(match[2]);
             
             if (takeCount) {
-                rolls.sort((a, b) => operator === 'greatest' ? b - a : a - b)
-                value = rolls.slice(0, takeCount).reduce((sum, val) => sum + val, 0)
+                const rolls = Array.from({ length: count }, 
+                    () => Math.floor(Math.random() * sides) + 1
+                );
+                rolls.sort((a, b) => operator === 'greatest' ? b - a : a - b);
+                const value = rolls.slice(0, takeCount).reduce((a, b) => a + b, 0);
+                total += isSubtraction ? -value : value;
             } else {
-                value = operator === 'sum' 
-                    ? rolls.reduce((sum, val) => sum + val, 0)
-                    : operator === 'greatest'
-                        ? Math.max(...rolls)
-                        : Math.min(...rolls)
+                // Simple sum
+                let sum = 0;
+                for (let i = 0; i < count; i++) {
+                    sum += Math.floor(Math.random() * sides) + 1;
+                }
+                total += isSubtraction ? -sum : sum;
             }
-
-            total += isSubtraction ? -value : value
         } else if (/^\d+$/.test(cleanPart)) {
-            const num = parseInt(cleanPart)
-            total += isSubtraction ? -num : num
+            const num = parseInt(cleanPart);
+            total += isSubtraction ? -num : num;
         }
     }
 
-    return total
+    return total;
 }
 
 export function calculateHistogram(formula: string, iterations = 100000): HistogramResult {
-    // Check if this is a threshold roll by looking for '>=' or '>' in the formula
     const isThresholdRoll = /\d+d\d+[>]=?\d+/.test(formula);
 
     if (isThresholdRoll) {
@@ -339,42 +333,62 @@ export function calculateHistogram(formula: string, iterations = 100000): Histog
         let totalSuccesses = 0;
         let atLeastOneCount = 0;
 
-        // Extract threshold value from formula
-        const thresholdMatch = formula.match(/(\d+)d(\d+)([>]=?|>)(\d+)/);
-        if (!thresholdMatch) throw new Error("Invalid threshold formula");
+        // Calculate max possible successes by analyzing formula
+        let maxPossibleSuccesses = 0;
+        let minPossibleSuccesses = 0;
+        const parts = formula.replace(/\s+/g, '').split(/(?=[-+])/);
         
-        const diceCount = parseInt(thresholdMatch[1]);
-        const thresholdValue = parseInt(thresholdMatch[4]);
-        const isGreaterEqual = thresholdMatch[3] === '>=';
+        for (const part of parts) {
+            const isSubtraction = part.startsWith('-');
+            const cleanPart = part.replace(/^[+-]/, '');
+            
+            const thresholdMatch = cleanPart.match(/(\d+)d(\d+)([>]=?|>)(\d+)/);
+            if (thresholdMatch) {
+                const diceCount = parseInt(thresholdMatch[1]);
+                if (isSubtraction) {
+                    minPossibleSuccesses -= diceCount;
+                } else {
+                    maxPossibleSuccesses += diceCount;
+                }
+            } else if (/^\d+$/.test(cleanPart)) {
+                const num = parseInt(cleanPart);
+                if (isSubtraction) {
+                    minPossibleSuccesses -= num;
+                    maxPossibleSuccesses -= num;
+                } else {
+                    minPossibleSuccesses += num;
+                    maxPossibleSuccesses += num;
+                }
+            }
+        }
 
         for (let i = 0; i < iterations; i++) {
             const roll = calculateHistogramRoll(formula);
             frequencies.set(roll, (frequencies.get(roll) || 0) + 1);
-            totalSuccesses += roll;  // roll already represents number of successes
+            totalSuccesses += roll;
             if (roll > 0) atLeastOneCount++;
         }
 
-        // Ensure we have entries for all possible success counts (0 to diceCount)
-        for (let i = 0; i <= diceCount; i++) {
+        // Ensure we have entries for all possible success counts
+        for (let i = minPossibleSuccesses; i <= maxPossibleSuccesses; i++) {
             if (!frequencies.has(i)) {
                 frequencies.set(i, 0);
             }
         }
 
         // Calculate success probabilities
-        const successProbabilities = new Map<number, number>();
-        for (let i = 0; i <= diceCount; i++) {
-            const count = frequencies.get(i) || 0;
-            // Convert to probability (frequency / total rolls)
-            successProbabilities.set(i, count / iterations);
-        }
+        const successProbabilities = new Map(
+            Array.from(frequencies.entries())
+            .sort((a, b) => a[0] - b[0])
+            .map(([k, v]) => [k, v / iterations])
+        );
 
         return {
             isThresholdRoll: true,
             frequencies,
             totalRolls: iterations,
-            min: 0,
-            max: diceCount,
+            min: minPossibleSuccesses,
+            max: maxPossibleSuccesses,
             mean: totalSuccesses / iterations,
             standardDeviation: 0,
             percentiles: {
