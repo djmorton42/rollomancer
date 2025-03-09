@@ -8,15 +8,10 @@ interface StatsProps {
 
 // Color interpolation function
 const getColor = (frequency: number, isThreshold: boolean, stats: HistogramResult) => {
-  if (isThreshold) {
-    const hue = 270; // Purple base
-    const saturation = 70;
-    const lightness = 45 + (frequency * 15);
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-  }
-
-  // Original color logic for non-threshold rolls
-  const maxFreq = Math.max(...Array.from(stats.frequencies.values()));
+  // Get max frequency for normalization
+  const maxFreq = isThreshold
+    ? Math.max(...Array.from(stats.thresholdStats!.successProbabilities.values()))
+    : Math.max(...Array.from(stats.frequencies.values()));
   const normalizedValue = frequency / maxFreq;
   
   if (normalizedValue < 0.2) {
