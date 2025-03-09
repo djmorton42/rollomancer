@@ -158,12 +158,17 @@ function App() {
               <span>View on GitHub</span>
             </a>
             <span className="text-slate-500">•</span>
-            <a 
-              href="mailto:rollomancer@gmail.com"
-              className="text-slate-400 hover:text-slate-300 transition-colors text-sm"
-            >
-              Contact
-            </a>
+            <div className="text-slate-400 text-sm inline-flex items-center gap-1">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M0 3v18h24v-18h-24zm6.623 7.929l-4.623 5.712v-9.458l4.623 3.746zm-4.141-5.929h19.035l-9.517 7.713-9.518-7.713zm5.694 7.188l3.824 3.099 3.83-3.104 5.612 6.817h-18.779l5.513-6.812zm9.208-1.264l4.616-3.741v9.348l-4.616-5.607z"/>
+              </svg>
+              <a 
+                href="mailto:rollomancer@gmail.com"
+                className="text-blue-400 hover:text-blue-300 transition-colors font-medium"
+              >
+                rollomancer@gmail.com
+              </a>
+            </div>
           </div>
         </header>
         
