@@ -416,4 +416,62 @@ describe('diceParser', () => {
             expect(result.groups[2].average).toBeCloseTo(0.25, 2) // 1 * 0.25
         })
     })
+
+    describe('exact value threshold rolls', () => {
+        beforeEach(() => {
+            mockDiceRolls([
+                dieRollToPercentage(10, 10),
+                dieRollToPercentage(8, 10),
+                dieRollToPercentage(10, 10),
+                dieRollToPercentage(7, 10),
+                dieRollToPercentage(10, 10),
+            ])
+        })
+
+        it('correctly evaluates "5d10=10"', () => {
+            const result = parseDiceFormula('5d10=10')
+            
+            expect(result.formula).toBe('5d10=10')
+            expect(result.groups).toHaveLength(1)
+            expect(result.total).toBe(3) // Three 10s rolled
+        })
+
+        it('calculates correct average for exact match rolls', () => {
+            const cases = [
+                { formula: '4d6=6', expectedAverage: 0.667 },   // P(success) = 1/6 for each die
+                { formula: '3d10=5', expectedAverage: 0.3 },    // P(success) = 1/10 for each die
+                { formula: '2d20=20', expectedAverage: 0.1 }    // P(success) = 1/20 for each die
+            ]
+
+            cases.forEach(({ formula, expectedAverage }) => {
+                const result = parseDiceFormula(formula)
+                expect(result.groups[0].average).toBeCloseTo(expectedAverage, 2)
+            })
+        })
+
+        it('rejects invalid exact match values', () => {
+            expect(() => parseDiceFormula('3d6=0')).toThrow('cannot roll lower than 1')
+            expect(() => parseDiceFormula('3d6=7')).toThrow('cannot roll higher than 6')
+            expect(() => parseDiceFormula('3d10=11')).toThrow('cannot roll higher than 10')
+        })
+    })
+
+    describe('simple exact value threshold rolls', () => {
+        beforeEach(() => {
+            mockDiceRolls([
+                dieRollToPercentage(1, 2),
+                dieRollToPercentage(2, 2),
+                dieRollToPercentage(1, 2),
+                dieRollToPercentage(1, 2),
+                dieRollToPercentage(2, 2),
+                dieRollToPercentage(1, 2),
+            ])
+        })
+
+        it('correctly evaluates "6d2=1"', () => {
+            const result = parseDiceFormula('6d2=1')
+            expect(result.groups[0].value).toBe(4)
+            expect(result.total).toBe(4)
+        })
+    })
 }) 

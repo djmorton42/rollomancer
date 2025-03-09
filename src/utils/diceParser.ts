@@ -27,9 +27,9 @@ export interface RollResult {
     favouriteLabel?: string
 }
 
-interface ThresholdOperator {
-    type: '>=' | '>';
-    value: number;
+export interface ThresholdOperator {
+    type: '>=' | '>' | '='
+    value: number
 } 
 
 export function rollDie(sides: number): DieResult {
@@ -76,11 +76,13 @@ function calculateAverageForTakeN(count: number, sides: number, operator: DiceOp
     return sum / allCombinations
 }
 
-function calculateThresholdAverage(count: number, sides: number, threshold: number, isGreaterEqual: boolean): number {
+function calculateThresholdAverage(count: number, sides: number, threshold: number, operator: '>=' | '>' | '='): number {
     // Calculate probability of a single die succeeding
-    const successProbability = isGreaterEqual
-        ? (sides - threshold + 1) / sides
-        : (sides - threshold) / sides;
+    const successProbability = operator === '=' 
+        ? 1 / sides
+        : operator === '>=' 
+            ? (sides - threshold + 1) / sides
+            : (sides - threshold) / sides;
     
     // For a binomial distribution, expected value is n*p
     return count * successProbability;
@@ -92,7 +94,7 @@ function calculateExpectedAverage(count: number, sides: number, operator: DiceOp
             count,
             sides,
             threshold.value,
-            threshold.type === '>='
+            threshold.type === '>=' ? '>=' : threshold.type === '>' ? '>' : '='
         );
     }
 
@@ -138,8 +140,8 @@ function parseOneGroup(groupStr: string, skipAverages?: boolean): DiceGroupResul
     let takeCount: number | undefined
     let threshold: ThresholdOperator | undefined
 
-    // Check for threshold operators (>=, >)
-    const thresholdMatch = diceFormula.match(/(\d+)d(\d+)([>]=?|<)(\d+)/)
+    // Check for threshold operators (>=, >, =)
+    const thresholdMatch = diceFormula.match(/(\d+)d(\d+)([>]=?|>|=)(\d+)/)
     if (thresholdMatch) {
         const [_, count, sides, op, value] = thresholdMatch
         const thresholdValue = parseInt(value)
@@ -154,7 +156,7 @@ function parseOneGroup(groupStr: string, skipAverages?: boolean): DiceGroupResul
         }
 
         threshold = {
-            type: op === '>=' ? '>=' : '>',
+            type: op as '>=' | '>' | '=',
             value: thresholdValue
         }
         diceFormula = `${count}d${sides}`
@@ -197,9 +199,11 @@ function parseOneGroup(groupStr: string, skipAverages?: boolean): DiceGroupResul
     if (threshold) {
         group.threshold = threshold
         group.value = group.dice.filter(die => {
-            return threshold.type === '>=' 
-                ? die.value >= threshold.value 
-                : die.value > threshold.value
+            return threshold.type === '=' 
+                ? die.value === threshold.value
+                : threshold.type === '>=' 
+                    ? die.value >= threshold.value 
+                    : die.value > threshold.value
         }).length
     } else if (takeCount) {
         const sortedValues = group.dice
@@ -231,7 +235,7 @@ export function parseDiceFormula(formula: string, options: ParseDiceOptions = {}
         const cleanPart = part.replace(/^[+-]/, '')
 
         // Updated regex to handle both traditional and threshold formulas
-        if (/^(\d+[<>])?[<>]?\d+d\d+([>]=?\d+)?$/i.test(cleanPart)) {
+        if (/^(\d+[<>])?[<>]?\d+d\d+(?:(?:[>]=?|>|=)\d+)?$/i.test(cleanPart)) {
             const group = parseOneGroup(cleanPart, options.skipAverages)
             if (isSubtraction) {
                 group.value = -group.value
@@ -291,16 +295,19 @@ function calculateHistogramRoll(formula: string): number {
         const cleanPart = part.replace(/^[+-]/, '');
 
         // Check if this part is a threshold roll
-        const thresholdMatch = cleanPart.match(/(\d+)d(\d+)([>]=?|>)(\d+)/);
+        const thresholdMatch = cleanPart.match(/(\d+)d(\d+)([>]=?|>|=)(\d+)/);
         if (thresholdMatch) {
             const [_, count, sides, op, value] = thresholdMatch;
             const threshold = parseInt(value);
-            const isGreaterEqual = op === '>=';
             
             let successes = 0;
             for (let i = 0; i < parseInt(count); i++) {
                 const roll = Math.floor(Math.random() * parseInt(sides)) + 1;
-                if (isGreaterEqual ? roll >= threshold : roll > threshold) {
+                if (op === '=' 
+                    ? roll === threshold
+                    : op === '>=' 
+                        ? roll >= threshold 
+                        : roll > threshold) {
                     successes++;
                 }
             }
@@ -357,7 +364,7 @@ function calculateHistogramRoll(formula: string): number {
 }
 
 export function calculateHistogram(formula: string, iterations = 100000): HistogramResult {
-    const isThresholdRoll = /\d+d\d+[>]=?\d+/.test(formula);
+    const isThresholdRoll = /\d+d\d+([>]=?|>|=)\d+/.test(formula);
 
     if (isThresholdRoll) {
         const frequencies = new Map<number, number>();
@@ -373,7 +380,7 @@ export function calculateHistogram(formula: string, iterations = 100000): Histog
             const isSubtraction = part.startsWith('-');
             const cleanPart = part.replace(/^[+-]/, '');
             
-            const thresholdMatch = cleanPart.match(/(\d+)d(\d+)([>]=?|>)(\d+)/);
+            const thresholdMatch = cleanPart.match(/(\d+)d(\d+)([>]=?|>|=)(\d+)/);
             if (thresholdMatch) {
                 const diceCount = parseInt(thresholdMatch[1]);
                 if (isSubtraction) {
