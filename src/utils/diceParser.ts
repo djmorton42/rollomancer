@@ -252,7 +252,7 @@ export interface HistogramResult {
 
 function calculateHistogramRoll(formula: string): number {
     // Check if this is a threshold roll
-    const thresholdMatch = formula.match(/(\d+)d(\d+)([>]=?\d+)/);
+    const thresholdMatch = formula.match(/(\d+)d(\d+)([>]=?|>)(\d+)/);
     if (thresholdMatch) {
         const [_, count, sides, op, value] = thresholdMatch;
         const threshold = parseInt(value);
@@ -340,12 +340,12 @@ export function calculateHistogram(formula: string, iterations = 100000): Histog
         let atLeastOneCount = 0;
 
         // Extract threshold value from formula
-        const thresholdMatch = formula.match(/(\d+)d(\d+)([>]=?\d+)/);
+        const thresholdMatch = formula.match(/(\d+)d(\d+)([>]=?|>)(\d+)/);
         if (!thresholdMatch) throw new Error("Invalid threshold formula");
         
         const diceCount = parseInt(thresholdMatch[1]);
-        const thresholdValue = parseInt(thresholdMatch[3]);
-        const isGreaterEqual = thresholdMatch[2] === '>=';
+        const thresholdValue = parseInt(thresholdMatch[4]);
+        const isGreaterEqual = thresholdMatch[3] === '>=';
 
         for (let i = 0; i < iterations; i++) {
             const roll = calculateHistogramRoll(formula);
