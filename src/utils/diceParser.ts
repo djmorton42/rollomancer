@@ -16,6 +16,7 @@ export interface DiceGroupResult {
     value: number // The computed value after applying the operator
     average: number // The expected average value for this dice group
     takeCount?: number // 
+    threshold?: ThresholdOperator
 }
 
 // The complete result of evaluating a formula
@@ -25,6 +26,11 @@ export interface RollResult {
     formula: string
     favouriteLabel?: string
 }
+
+interface ThresholdOperator {
+    type: '>=' | '>';
+    value: number;
+} 
 
 export function rollDie(sides: number): DieResult {
     return {
@@ -111,21 +117,33 @@ function parseOneGroup(groupStr: string, skipAverages?: boolean): DiceGroupResul
     let operator: DiceOperator = 'sum'
     let diceFormula = groupStr.trim()
     let takeCount: number | undefined
+    let threshold: ThresholdOperator | undefined
 
-    // Check for take count before operator (e.g., "3>4d6")
-    const takeMatch = diceFormula.match(/^(\d+)([<>])/)
-    if (takeMatch) {
-        takeCount = parseInt(takeMatch[1])
-        operator = takeMatch[2] === '>' ? 'greatest' : 'least'
-        diceFormula = diceFormula.slice(takeMatch[0].length)
-    } else if (diceFormula.startsWith('>')) {
-        operator = 'greatest'
-        takeCount = 1 // Default to taking 1 when using >
-        diceFormula = diceFormula.slice(1)
-    } else if (diceFormula.startsWith('<')) {
-        operator = 'least'
-        takeCount = 1 // Default to taking 1 when using <
-        diceFormula = diceFormula.slice(1)
+    // Check for threshold operators (>=, >)
+    const thresholdMatch = diceFormula.match(/(\d+)d(\d+)([>]=?|<)(\d+)/)
+    if (thresholdMatch) {
+        const [_, count, sides, op, value] = thresholdMatch
+        threshold = {
+            type: op === '>=' ? '>=' : '>',
+            value: parseInt(value)
+        }
+        diceFormula = `${count}d${sides}`
+    } else {
+        // Your existing operator parsing code
+        const takeMatch = diceFormula.match(/^(\d+)([<>])/)
+        if (takeMatch) {
+            takeCount = parseInt(takeMatch[1])
+            operator = takeMatch[2] === '>' ? 'greatest' : 'least'
+            diceFormula = diceFormula.slice(takeMatch[0].length)
+        } else if (diceFormula.startsWith('>')) {
+            operator = 'greatest'
+            takeCount = 1
+            diceFormula = diceFormula.slice(1)
+        } else if (diceFormula.startsWith('<')) {
+            operator = 'least'
+            takeCount = 1
+            diceFormula = diceFormula.slice(1)
+        }
     }
 
     const diceRegex = /(\d+)d(\d+)/i
@@ -138,21 +156,29 @@ function parseOneGroup(groupStr: string, skipAverages?: boolean): DiceGroupResul
     const count = parseInt(match[1])
     const sides = parseInt(match[2])
 
-    // If takeCount is specified, it can't be larger than the dice count
     if (takeCount && takeCount > count) {
         throw new Error(`Cannot take ${takeCount} dice from ${count} dice`)
     }
 
     const group = createDiceGroup(count, sides, operator, takeCount)
     
-    // If we have a takeCount, we need to modify the value calculation
-    if (takeCount) {
-        const sortedValues = group.dice.map(d => d.value).sort((a, b) => operator === 'greatest' ? b - a : a - b)
+    // If we have a threshold, count dice meeting the condition
+    if (threshold) {
+        group.threshold = threshold
+        group.value = group.dice.filter(die => {
+            return threshold.type === '>=' 
+                ? die.value >= threshold.value 
+                : die.value > threshold.value
+        }).length
+    } else if (takeCount) {
+        const sortedValues = group.dice
+            .map(d => d.value)
+            .sort((a, b) => operator === 'greatest' ? b - a : a - b)
         group.value = sortedValues.slice(0, takeCount).reduce((sum, val) => sum + val, 0)
     }
 
     if (skipAverages) {
-        group.average = 0 // Skip averaging
+        group.average = 0
     }
 
     return group
@@ -173,7 +199,8 @@ export function parseDiceFormula(formula: string, options: ParseDiceOptions = {}
         const isSubtraction = part.startsWith('-')
         const cleanPart = part.replace(/^[+-]/, '')
 
-        if (/^(\d+[<>])?[<>]?\d+d\d+$/i.test(cleanPart)) {
+        // Updated regex to handle both traditional and threshold formulas
+        if (/^(\d+[<>])?[<>]?\d+d\d+([>]=?\d+)?$/i.test(cleanPart)) {
             const group = parseOneGroup(cleanPart, options.skipAverages)
             if (isSubtraction) {
                 group.value = -group.value
@@ -332,4 +359,4 @@ export function calculateHistogram(formula: string, iterations = 100000): Histog
             p99: getPercentile(99)
         }
     };
-} 
+}

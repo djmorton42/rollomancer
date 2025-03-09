@@ -286,6 +286,61 @@ describe('diceParser', () => {
         })
     })
 
+    describe('twilight imperium like hit formulas', () => {
+        beforeEach(() => {
+            mockDiceRolls(
+                [
+                    dieRollToPercentage(8, 10),
+                    dieRollToPercentage(6, 10),
+                    dieRollToPercentage(9, 10),
+                    dieRollToPercentage(3, 10),
+                    dieRollToPercentage(2, 10),
+                    dieRollToPercentage(3, 10),
+                    dieRollToPercentage(10, 10),
+                    dieRollToPercentage(2, 10),
+                    dieRollToPercentage(9, 10),
+                    dieRollToPercentage(7, 10),
+                ]                
+            )
+        })
+
+        it('correctly evaluates "5d10>=8"', () => {
+            const result = parseDiceFormula('5d10>=8')
+          
+            expect(result.formula).toBe('5d10>=8')
+            expect(result.groups).toHaveLength(1)
+            
+            expect(result.total).toBe(2)
+        })
+
+        it('correctly evaluates "5d10>=8 + 3d10>=9"', () => {
+            const result = parseDiceFormula('5d10>=8 + 3d10>=9')
+          
+            expect(result.formula).toBe('5d10>=8+3d10>=9')
+            expect(result.groups).toHaveLength(2)
+            
+            expect(result.total).toBe(3)
+        })
+
+        it('correctly evaluates "5d10>8"', () => {
+            const result = parseDiceFormula('5d10>8')
+          
+            expect(result.formula).toBe('5d10>8')
+            expect(result.groups).toHaveLength(1)
+            
+            expect(result.total).toBe(1)
+        })
+
+        it('correctly evaluates "5d10>8 + 5d10>9"', () => {
+            const result = parseDiceFormula('5d10>8 + 5d10>9')
+          
+            expect(result.formula).toBe('5d10>8+5d10>9')
+            expect(result.groups).toHaveLength(2)
+            
+            expect(result.total).toBe(2)
+        })
+    })
+
     describe('complex advantage and disadvantage formulas', () => {
         beforeEach(() => {
             mockDiceRolls(

@@ -9,10 +9,14 @@ interface ResultsProps {
   favouriteLabel?: string;
 }
 
-function getDiceStyles(operator: DiceOperator) {
+function getDiceStyles(operator: DiceOperator, hasThreshold?: boolean) {
   // Base styles for all dice
   const baseStyle = "inline-block px-3 py-1 rounded-full text-sm font-medium"
   
+  if (hasThreshold) {
+    return `${baseStyle} bg-purple-900 text-purple-100 border-2 border-purple-500`
+  }
+
   switch (operator) {
     case 'sum':
       return `${baseStyle} bg-blue-900 text-blue-100 border-2 border-blue-500`
@@ -24,17 +28,20 @@ function getDiceStyles(operator: DiceOperator) {
 }
 
 function DiceGroup({ group, rollId }: { group: DiceGroupResult; rollId: number }) {
-  const operatorSymbol = {
-    sum: '∑',
-    greatest: group.takeCount && group.takeCount > 1 ? `max ${group.takeCount}` : 'max',
-    least: group.takeCount && group.takeCount > 1 ? `min ${group.takeCount}` : 'min'
-  }[group.operator]
+  const operatorSymbol = group.threshold
+    ? `${group.threshold.type}${group.threshold.value}`
+    : {
+        sum: '∑',
+        greatest: group.takeCount && group.takeCount > 1 ? `max ${group.takeCount}` : 'max',
+        least: group.takeCount && group.takeCount > 1 ? `min ${group.takeCount}` : 'min'
+      }[group.operator]
 
   const operatorClass = {
     sum: 'text-blue-400',
     greatest: 'text-emerald-400',
-    least: 'text-amber-400'
-  }[group.operator]
+    least: 'text-amber-400',
+    threshold: 'text-purple-400'
+  }[group.threshold ? 'threshold' : group.operator]
 
   // Create array of dice with their indices to preserve original order
   const diceWithIndices = group.dice.map((die, index) => ({ die, originalIndex: index }))
@@ -50,15 +57,24 @@ function DiceGroup({ group, rollId }: { group: DiceGroupResult; rollId: number }
 
   // Track which dice are selected
   const selectedIndices = new Set(
-    group.takeCount 
-      ? diceWithIndices
-          .slice(0, group.takeCount)
-          .map(d => d.originalIndex)
-      : diceWithIndices.map(d => d.originalIndex)
+    group.threshold
+      ? group.dice
+          .map((die, index) => ({ die, index }))
+          .filter(({ die }) => 
+            group.threshold!.type === '>=' 
+              ? die.value >= group.threshold!.value 
+              : die.value > group.threshold!.value
+          )
+          .map(({ index }) => index)
+      : group.takeCount 
+        ? diceWithIndices
+            .slice(0, group.takeCount)
+            .map(d => d.originalIndex)
+        : diceWithIndices.map(d => d.originalIndex)
   )
 
   // Get base style for dice
-  const baseStyle = getDiceStyles(group.operator)
+  const baseStyle = getDiceStyles(group.operator, !!group.threshold)
 
   return (
     <motion.div
@@ -88,7 +104,7 @@ function DiceGroup({ group, rollId }: { group: DiceGroupResult; rollId: number }
                 stiffness: 200
               }}
               className={`${baseStyle} ${
-                group.takeCount 
+                group.threshold || group.takeCount
                   ? selectedIndices.has(diceIndex)
                     ? 'ring-2 ring-offset-1 ring-offset-slate-700'
                     : 'opacity-40'
