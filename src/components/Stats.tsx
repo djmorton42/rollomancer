@@ -61,7 +61,7 @@ export function Stats({ stats, formula }: StatsProps) {
         <div className="mt-4">
           <h3 className="font-bold mb-2">Success Distribution</h3>
           <div className="h-40 flex items-end gap-1 relative">
-            {Array.from(stats.thresholdStats!.successProbabilities.entries()).map(([successes, probability], index, array) => {
+            {Array.from(stats.thresholdStats!.successProbabilities.entries()).map(([successes, probability], _index, _array) => {
               // Scale the height relative to the maximum probability
               const maxProb = Math.max(...Array.from(stats.thresholdStats!.successProbabilities.values()));
               const height = (probability / maxProb) * 100;
@@ -94,7 +94,7 @@ export function Stats({ stats, formula }: StatsProps) {
 
   // Original stats display for non-threshold rolls
   const maxFrequency = Math.max(...Array.from(stats.frequencies.values()));
-  const minFrequency = Math.min(...Array.from(stats.frequencies.values()));
+  //const minFrequency = Math.min(...Array.from(stats.frequencies.values()));
   
   const getHeight = (frequency: number) => {
     return (frequency / maxFrequency) * 100;
