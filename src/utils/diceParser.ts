@@ -242,12 +242,37 @@ export interface HistogramResult {
     p95: number;
     p99: number;
   };
+  isThresholdRoll?: boolean;
+  thresholdStats?: {
+    averageSuccesses: number;
+    probabilityOfAtLeastOne: number;
+    successProbabilities: Map<number, number>; // Map of success count to probability
+  };
 }
 
 function calculateHistogramRoll(formula: string): number {
-    const displayFormula = formula.replace(/\s+/g, '')
-    const parts = displayFormula.split(/(?=[-+])/)
-    let total = 0
+    // Check if this is a threshold roll
+    const thresholdMatch = formula.match(/(\d+)d(\d+)([>]=?\d+)/);
+    if (thresholdMatch) {
+        const [_, count, sides, op, value] = thresholdMatch;
+        const threshold = parseInt(value);
+        const isGreaterEqual = op === '>=';
+        
+        // Roll the dice and count successes
+        let successes = 0;
+        for (let i = 0; i < parseInt(count); i++) {
+            const roll = Math.floor(Math.random() * parseInt(sides)) + 1;
+            if (isGreaterEqual ? roll >= threshold : roll > threshold) {
+                successes++;
+            }
+        }
+        return successes;
+    }
+
+    // Original non-threshold roll logic
+    const displayFormula = formula.replace(/\s+/g, '');
+    const parts = displayFormula.split(/(?=[-+])/);
+    let total = 0;
 
     for (const part of parts) {
         const isSubtraction = part.startsWith('-')
@@ -306,6 +331,64 @@ function calculateHistogramRoll(formula: string): number {
 }
 
 export function calculateHistogram(formula: string, iterations = 100000): HistogramResult {
+    // Check if this is a threshold roll by looking for '>=' or '>' in the formula
+    const isThresholdRoll = /\d+d\d+[>]=?\d+/.test(formula);
+
+    if (isThresholdRoll) {
+        const frequencies = new Map<number, number>();
+        let totalSuccesses = 0;
+        let atLeastOneCount = 0;
+
+        // Extract threshold value from formula
+        const thresholdMatch = formula.match(/(\d+)d(\d+)([>]=?\d+)/);
+        if (!thresholdMatch) throw new Error("Invalid threshold formula");
+        
+        const diceCount = parseInt(thresholdMatch[1]);
+        const thresholdValue = parseInt(thresholdMatch[3]);
+        const isGreaterEqual = thresholdMatch[2] === '>=';
+
+        for (let i = 0; i < iterations; i++) {
+            const roll = calculateHistogramRoll(formula);
+            frequencies.set(roll, (frequencies.get(roll) || 0) + 1);
+            totalSuccesses += roll;  // roll already represents number of successes
+            if (roll > 0) atLeastOneCount++;
+        }
+
+        // Ensure we have entries for all possible success counts (0 to diceCount)
+        for (let i = 0; i <= diceCount; i++) {
+            if (!frequencies.has(i)) {
+                frequencies.set(i, 0);
+            }
+        }
+
+        // Calculate success probabilities
+        const successProbabilities = new Map<number, number>();
+        for (let i = 0; i <= diceCount; i++) {
+            const count = frequencies.get(i) || 0;
+            // Convert to probability (frequency / total rolls)
+            successProbabilities.set(i, count / iterations);
+        }
+
+        return {
+            isThresholdRoll: true,
+            frequencies,
+            totalRolls: iterations,
+            min: 0,
+            max: diceCount,
+            mean: totalSuccesses / iterations,
+            standardDeviation: 0,
+            percentiles: {
+                p25: 0, p50: 0, p75: 0, p90: 0, p95: 0, p99: 0
+            },
+            thresholdStats: {
+                averageSuccesses: totalSuccesses / iterations,
+                probabilityOfAtLeastOne: atLeastOneCount / iterations,
+                successProbabilities
+            }
+        };
+    }
+
+    // Original histogram calculation for non-threshold rolls
     const frequencies = new Map<number, number>();
     const allValues: number[] = [];
     let min = Number.MAX_SAFE_INTEGER;
