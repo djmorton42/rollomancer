@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { addToFormula } from '../utils/formulaUtils'
 
 interface DiceInputProps {
   formula: string;
@@ -38,15 +39,8 @@ export function DiceInput({ formula, setFormula, onRoll, onStats, onClear }: Dic
     }
   }
 
-  const addToFormula = (addition: string) => {
-    const currentFormula = formula.trim()
-    if (currentFormula === '') {
-      setFormula(addition)
-    } else if (addition.startsWith('+')) {
-      setFormula(currentFormula + addition)
-    } else {
-      setFormula(currentFormula + (currentFormula.endsWith('+') ? '' : ' + ') + addition)
-    }
+  const addToFormulaInInput = (addition: string) => {
+    setFormula(addToFormula(formula, addition))
   }
 
   return (
@@ -104,7 +98,7 @@ export function DiceInput({ formula, setFormula, onRoll, onStats, onClear }: Dic
               <QuickLink
                 key={`d${sides}`}
                 text={`d${sides}`}
-                onClick={() => addToFormula(`1d${sides}`)}
+                onClick={() => addToFormulaInInput(`1d${sides}`)}
                 className="bg-blue-900 text-blue-100 border-2 border-blue-500 hover:bg-blue-800 transition-colors"
               />
             ))}
@@ -114,7 +108,7 @@ export function DiceInput({ formula, setFormula, onRoll, onStats, onClear }: Dic
               <QuickLink
                 key={`+${modifier}`}
                 text={`+${modifier}`}
-                onClick={() => addToFormula(`+${modifier}`)}
+                onClick={() => addToFormulaInInput(`+${modifier}`)}
                 className="bg-slate-700 text-slate-100 border-2 border-slate-500 hover:bg-slate-600 transition-colors"
               />
             ))}
