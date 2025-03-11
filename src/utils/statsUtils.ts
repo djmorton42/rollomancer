@@ -217,6 +217,7 @@ export function calculateHistogram(formula: string, iterations = 100000): Histog
     );
 
     return {
+        isThresholdRoll: false,
         min,
         max,
         frequencies: sortedFrequencies,
