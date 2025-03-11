@@ -9,6 +9,24 @@ interface DiceInputProps {
   onClear: () => void;
 }
 
+interface QuickLinkProps {
+  text: string;
+  onClick: () => void;
+  className?: string;
+}
+
+function QuickLink({ text, onClick, className = "" }: QuickLinkProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${className}`}
+    >
+      {text}
+    </button>
+  );
+}
+
 export function DiceInput({ formula, setFormula, onRoll, onStats, onClear }: DiceInputProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [showHelp, setShowHelp] = useState(false)
@@ -17,6 +35,17 @@ export function DiceInput({ formula, setFormula, onRoll, onStats, onClear }: Dic
     e.preventDefault()
     if (formula.trim()) {
       onRoll(formula.trim())
+    }
+  }
+
+  const addToFormula = (addition: string) => {
+    const currentFormula = formula.trim()
+    if (currentFormula === '') {
+      setFormula(addition)
+    } else if (addition.startsWith('+')) {
+      setFormula(currentFormula + addition)
+    } else {
+      setFormula(currentFormula + (currentFormula.endsWith('+') ? '' : ' + ') + addition)
     }
   }
 
@@ -61,6 +90,35 @@ export function DiceInput({ formula, setFormula, onRoll, onStats, onClear }: Dic
           >
             Clear
           </button>
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <div className="text-center mb-2">
+          <h3 className="text-lg font-bold text-slate-300">Quick Dice</h3>
+          <div className="h-0.5 w-16 bg-slate-600 mx-auto mt-1"></div>
+        </div>
+        <div className="flex flex-col items-center space-y-2">
+          <div className="flex flex-wrap justify-center gap-2">
+            {[4, 6, 8, 10, 12, 20].map(sides => (
+              <QuickLink
+                key={`d${sides}`}
+                text={`d${sides}`}
+                onClick={() => addToFormula(`1d${sides}`)}
+                className="bg-blue-900 text-blue-100 border-2 border-blue-500 hover:bg-blue-800 transition-colors"
+              />
+            ))}
+          </div>
+          <div className="flex flex-wrap justify-center gap-2">
+            {[1, 2, 3, 4, 5, 6].map(modifier => (
+              <QuickLink
+                key={`+${modifier}`}
+                text={`+${modifier}`}
+                onClick={() => addToFormula(`+${modifier}`)}
+                className="bg-slate-700 text-slate-100 border-2 border-slate-500 hover:bg-slate-600 transition-colors"
+              />
+            ))}
+          </div>
         </div>
       </div>
 
