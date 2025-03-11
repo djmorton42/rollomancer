@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import type { HistogramResult } from '../utils/diceParser'
+import type { HistogramResult } from '../utils/statsUtils'
 
 interface StatsProps {
   stats: HistogramResult;
