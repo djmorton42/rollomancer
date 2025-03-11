@@ -52,75 +52,6 @@ function computeGroupValue(dice: DieResult[], operator: DiceOperator): number {
     }
 }
 
-function calculateAverageForTakeN(count: number, sides: number, operator: DiceOperator, takeCount: number): number {
-    let sum = 0
-    const allCombinations = Math.pow(sides, count) // Total possible combinations
-    
-    // For each possible combination of dice
-    for (let i = 0; i < allCombinations; i++) {
-        const rolls: number[] = []
-        let temp = i
-        
-        // Convert number to dice rolls
-        for (let j = 0; j < count; j++) {
-            rolls.push((temp % sides) + 1)
-            temp = Math.floor(temp / sides)
-        }
-        
-        // Sort rolls and take N based on operator
-        rolls.sort((a, b) => operator === 'greatest' ? b - a : a - b)
-        const value = rolls.slice(0, takeCount).reduce((a, b) => a + b, 0)
-        sum += value
-    }
-    
-    return sum / allCombinations
-}
-
-function calculateThresholdAverage(count: number, sides: number, threshold: number, operator: '>=' | '>' | '='): number {
-    // Calculate probability of a single die succeeding
-    const successProbability = operator === '=' 
-        ? 1 / sides
-        : operator === '>=' 
-            ? (sides - threshold + 1) / sides
-            : (sides - threshold) / sides;
-    
-    // For a binomial distribution, expected value is n*p
-    return count * successProbability;
-}
-
-function calculateExpectedAverage(count: number, sides: number, operator: DiceOperator, takeCount?: number, threshold?: ThresholdOperator): number {
-    if (threshold) {
-        return calculateThresholdAverage(
-            count,
-            sides,
-            threshold.value,
-            threshold.type === '>=' ? '>=' : threshold.type === '>' ? '>' : '='
-        );
-    }
-
-    switch (operator) {
-        case 'sum':
-            return (sides + 1) / 2 * count
-        case 'greatest': {
-            if (!takeCount || takeCount === 1) {
-                const term = (1 - 1.0 / (2 * sides))
-                return sides * (1 - (1.0 / (count + 1)) * Math.pow(term, count + 1))
-            }
-            return calculateAverageForTakeN(count, sides, operator, takeCount)
-        }
-        case 'least': {
-            if (!takeCount || takeCount === 1) {
-                const term = (1 - 1.0 / (2 * sides))
-                const greatestAvg = sides * (1 - (1.0 / (count + 1)) * Math.pow(term, count + 1))
-                return sides + 1 - greatestAvg
-            }
-            return calculateAverageForTakeN(count, sides, operator, takeCount)
-        }
-        default:
-            throw new Error(`Unknown operator: ${operator}`)
-    }
-}
-
 export function createDiceGroup(count: number, sides: number, operator: DiceOperator = 'sum', takeCount?: number): DiceGroupResult {
     const dice = Array.from({ length: count }, () => rollDie(sides))
     return {
@@ -263,3 +194,5 @@ export function parseDiceFormula(formula: string, options: ParseDiceOptions = {}
 }
 
 export type { HistogramResult } from './statsUtils'
+
+import { calculateExpectedAverage } from './statsUtils'
